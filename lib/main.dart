@@ -50,9 +50,6 @@ class StudyApp extends StatelessWidget {
   }
 }
 
-// ==========================================
-// 1. شاشة تسجيل الدخول
-// ==========================================
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
   @override
@@ -118,10 +115,6 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 }
-
-// ==========================================
-// 2. شاشة الترحيب (الرسالة التشجيعية)
-// ==========================================
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
   @override
@@ -135,17 +128,9 @@ class WelcomeScreen extends StatelessWidget {
             children: [
               const Icon(Icons.auto_stories, size: 80, color: Colors.white),
               const SizedBox(height: 30),
-              const Text(
-                "أهلاً بك في غرفة الدراسة!",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white),
-              ),
+              const Text("أهلاً بك في غرفة الدراسة!", textAlign: TextAlign.center, style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white)),
               const SizedBox(height: 20),
-              const Text(
-                "لقد اخترت المكان الصحيح. الدراسة هي مفتاح نجاحك، والنجاح ليس صعباً، بل يحتاج إلى القليل من التنظيم والصبر.\n\nهنا، سنساعدك على التركيز، والاسترخاء، والوصول إلى هدفك.",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.white70, height: 1.6),
-              ),
+              const Text("لقد اخترت المكان الصحيح. الدراسة هي مفتاح نجاحك، والنجاح ليس صعباً، بل يحتاج إلى القليل من التنظيم والصبر.\n\nهنا، سنساعدك على التركيز، والاسترخاء، والوصول إلى هدفك.", textAlign: TextAlign.center, style: TextStyle(fontSize: 16, color: Colors.white70, height: 1.6)),
               const SizedBox(height: 40),
               SizedBox(
                 width: double.infinity,
@@ -162,9 +147,6 @@ class WelcomeScreen extends StatelessWidget {
   }
 }
 
-// ==========================================
-// 3. شاشة اختيار اللغة
-// ==========================================
 class LanguageScreen extends StatelessWidget {
   const LanguageScreen({super.key});
   @override
@@ -201,9 +183,6 @@ class LanguageScreen extends StatelessWidget {
   }
 }
 
-// ==========================================
-// 4. شاشة المعلومات
-// ==========================================
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
   @override
@@ -250,10 +229,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
-
-// ==========================================
-// 5. شاشة التابات
-// ==========================================
 class MainAppScreen extends StatefulWidget {
   const MainAppScreen({super.key});
   @override
@@ -283,9 +258,6 @@ class _MainAppScreenState extends State<MainAppScreen> {
   }
 }
 
-// ==========================================
-// 6. شاشة المؤقت
-// ==========================================
 class RoomScreen extends StatefulWidget {
   const RoomScreen({super.key});
   @override
@@ -331,13 +303,12 @@ class _RoomScreenState extends State<RoomScreen> with SingleTickerProviderStateM
         else {
           _timer?.cancel();
           setState(() => isRunning = false);
-          _showRelaxationDialog(); // هنا كتطلع شاشة الاسترخاء
+          _showRelaxationDialog();
         }
       });
     }
   }
 
-  // نافذة الاسترخاء (بعد ما يكمل الوقت)
   void _showRelaxationDialog() {
     showDialog(
       context: context,
@@ -346,17 +317,13 @@ class _RoomScreenState extends State<RoomScreen> with SingleTickerProviderStateM
         backgroundColor: const Color(0xFF1E1E1E),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('أحسنت!', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
-        content: const Text(
-          'لقد درست وبذلت جهداً كبيراً. عقلك يحتاج إلى قسط من الراحة ليعود أقوى.\n\nهل تريد أن تتنفس بعمق؟',
-          textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.white70, fontSize: 16),
-        ),
+        content: const Text('لقد درست وبذلت جهداً كبيراً. عقلك يحتاج إلى قسط من الراحة ليعود أقوى.\n\nهل تريد أن تتنفس بعمق؟', textAlign: TextAlign.center, style: TextStyle(color: Colors.white70, fontSize: 16)),
         actionsAlignment: MainAxisAlignment.center,
         actions: [
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(context); // نسكرو النافذة
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const BreathingScreen())); // نروحو لشاشة التنفس
+              Navigator.pop(context);
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const BreathingScreen()));
             },
             child: const Text('ابدأ التنفس', style: TextStyle(fontSize: 16)),
           ),
@@ -393,10 +360,6 @@ class _RoomScreenState extends State<RoomScreen> with SingleTickerProviderStateM
     );
   }
 }
-
-// ==========================================
-// 7. شاشة تمرين التنفس (10 ثواني شهيق، 10 ثواني زفير)
-// ==========================================
 class BreathingScreen extends StatefulWidget {
   const BreathingScreen({super.key});
   @override
@@ -406,7 +369,7 @@ class BreathingScreen extends StatefulWidget {
 class _BreathingScreenState extends State<BreathingScreen> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
-  String _text = "شهيق (10 ثواني)";
+  String _text = "شهيق";
   bool _isInhaling = true;
   int _secondsLeft = 10;
   Timer? _timer;
@@ -422,10 +385,9 @@ class _BreathingScreenState extends State<BreathingScreen> with SingleTickerProv
         if (_secondsLeft > 1) {
           _secondsLeft--;
         } else {
-          // نبدلو للزفير
           _isInhaling = !_isInhaling;
           _secondsLeft = 10;
-          _text = _isInhaling ? "شهيق (10 ثواني)" : "زفير (10 ثواني)";
+          _text = _isInhaling ? "شهيق" : "زفير";
         }
       });
     });
@@ -443,14 +405,11 @@ class _BreathingScreenState extends State<BreathingScreen> with SingleTickerProv
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
       appBar: AppBar(title: const Text("الاسترخاء", style: TextStyle(color: Colors.white)), backgroundColor: Colors.transparent, elevation: 0, centerTitle: true),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(25.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(_text, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
-            const SizedBox(height: 20),
-            Text("$_secondsLeft", style: const TextStyle(fontSize: 60, fontWeight: FontWeight.bold, color: Colors.white)),
-            const SizedBox(height: 40),
             AnimatedBuilder(
               animation: _animation,
               builder: (context, child) {
@@ -459,12 +418,23 @@ class _BreathingScreenState extends State<BreathingScreen> with SingleTickerProv
                   height: 200 * _animation.value,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withOpacity(0.1),
                     border: Border.all(color: Colors.white, width: 2),
                   ),
                 );
               },
             ),
+            const SizedBox(height: 40),
+            Text("$_secondsLeft", style: const TextStyle(fontSize: 60, fontWeight: FontWeight.bold, color: Colors.white)),
+            const SizedBox(height: 40),
+            LinearProgressIndicator(
+              value: (10 - _secondsLeft) / 10,
+              backgroundColor: Colors.white24,
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+              minHeight: 10,
+            ),
+            const SizedBox(height: 20),
+            Text(_text, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
             const SizedBox(height: 60),
             ElevatedButton(
               onPressed: () => Navigator.pop(context),
@@ -477,9 +447,6 @@ class _BreathingScreenState extends State<BreathingScreen> with SingleTickerProv
   }
 }
 
-// ==========================================
-// 8. شاشة الإعدادات
-// ==========================================
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
   @override
@@ -495,4 +462,36 @@ class SettingsScreen extends StatelessWidget {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
             leading: const Icon(Icons.privacy_tip, color: Colors.white),
             title: const Text("سياسة الخصوصية", style: TextStyle(color: Colors.white)),
-    
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.white54),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PrivacyPolicyScreen())),
+          ),
+          const Divider(color: Colors.white24),
+          const ListTile(leading: Icon(Icons.storage, color: Colors.white), title: Text("تخزين البيانات", style: TextStyle(color: Colors.white)), subtitle: Text("جميع بياناتك تحفظ في هاتفك فقط.", style: TextStyle(color: Colors.white70))),
+        ],
+      ),
+    );
+  }
+}
+
+class PrivacyPolicyScreen extends StatelessWidget {
+  const PrivacyPolicyScreen({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("سياسة الخصوصية", style: TextStyle(color: Colors.white)), backgroundColor: Colors.transparent, elevation: 0, centerTitle: true),
+      body: const Padding(
+        padding: EdgeInsets.all(25.0),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("خصوصيتك تهمنا", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
+              SizedBox(height: 15),
+              Text("1. التطبيق لا يقوم بتسجيل أي بيانات شخصية أو إرسالها لأي جهة خارجية.\n\n2. جميع التسجيلات الصوتية والصور يتم تخزينها محلياً على هاتفك فقط.\n\n3. لا يوجد أي تتبع لموقعك أو مراقبة لاستخدامك.\n\n4. التطبيق صديق للبيئة وللطلبة، وهدفه مساعدتك على التركيز.", style: TextStyle(fontSize: 16, height: 1.6, color: Colors.white70)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
