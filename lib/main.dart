@@ -16,12 +16,12 @@ class StudyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         fontFamily: 'Segoe UI',
-        brightness: Brightness.dark, // تفعيل الوضع الليلي
-        scaffoldBackgroundColor: const Color(0xFF121212), // خلفية سوداء غامقة
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: const Color(0xFF121212),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.white, // أزرار بيضاء
-            foregroundColor: Colors.black, // نص أسود
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.black,
             elevation: 3,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
             padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
@@ -29,15 +29,15 @@ class StudyApp extends StatelessWidget {
         ),
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
-            foregroundColor: Colors.white, // نص أبيض
-            side: const BorderSide(color: Colors.white, width: 1.5), // حدود بيضاء
+            foregroundColor: Colors.white,
+            side: const BorderSide(color: Colors.white, width: 1.5),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
             padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
           ),
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: const Color(0xFF1E1E1E), // خلفية الحقول رمادية غامقة
+          fillColor: const Color(0xFF1E1E1E),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
           enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
           focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: const BorderSide(color: Colors.white, width: 1.5)),
@@ -71,9 +71,9 @@ class _AuthScreenState extends State<AuthScreen> {
       String? savedEmail = prefs.getString('user_email');
       String? savedPassword = prefs.getString('user_password');
       if (savedEmail == _emailController.text && savedPassword == _passwordController.text) {
-        if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoadingScreen()));
+        if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const WelcomeScreen()));
       } else {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("الإيميل أو كلمة السر غالطين")));
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("البريد الإلكتروني أو كلمة المرور غير صحيحة")));
       }
     } else {
       await prefs.setString('user_email', _emailController.text);
@@ -104,13 +104,13 @@ class _AuthScreenState extends State<AuthScreen> {
               const SizedBox(height: 30),
               TextField(controller: _emailController, decoration: const InputDecoration(labelText: "البريد الإلكتروني", prefixIcon: Icon(Icons.email))),
               const SizedBox(height: 15),
-              TextField(controller: _passwordController, obscureText: true, decoration: const InputDecoration(labelText: "كلمة السر", prefixIcon: Icon(Icons.lock))),
+              TextField(controller: _passwordController, obscureText: true, decoration: const InputDecoration(labelText: "كلمة المرور", prefixIcon: Icon(Icons.lock))),
               const SizedBox(height: 30),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(onPressed: _submit, child: Text(_isLogin ? "دخول" : "إنشاء حساب", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
               ),
-              TextButton(onPressed: () => setState(() => _isLogin = !_isLogin), child: Text(_isLogin ? "ما عندكش حساب؟ سجل هنا" : "عندك حساب؟ دخل من هنا", style: const TextStyle(color: Colors.white70))),
+              TextButton(onPressed: () => setState(() => _isLogin = !_isLogin), child: Text(_isLogin ? "ليس لديك حساب؟ سجل هنا" : "لديك حساب؟ دخل من هنا", style: const TextStyle(color: Colors.white70))),
             ],
           ),
         ),
@@ -120,58 +120,7 @@ class _AuthScreenState extends State<AuthScreen> {
 }
 
 // ==========================================
-// 2. شاشة التحميل
-// ==========================================
-class LoadingScreen extends StatefulWidget {
-  const LoadingScreen({super.key});
-  @override
-  State<LoadingScreen> createState() => _LoadingScreenState();
-}
-
-class _LoadingScreenState extends State<LoadingScreen> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat(reverse: true);
-    _animation = Tween<double>(begin: -15, end: 15).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const WelcomeScreen()));
-    });
-  }
-
-  @override
-  void dispose() { _controller.dispose(); super.dispose(); }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AnimatedBuilder(
-              animation: _animation,
-              builder: (context, child) => Transform.translate(
-                offset: Offset(0, _animation.value),
-                child: Image.asset('ghost.png', height: 180, errorBuilder: (c, e, s) => const Icon(Icons.image, size: 100)),
-              ),
-            ),
-            const SizedBox(height: 40),
-            const Text("Study Room", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, letterSpacing: 2, color: Colors.white)),
-            const SizedBox(height: 20),
-            const CircularProgressIndicator(color: Colors.white),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ==========================================
-// 3. شاشة اللغة
+// 2. شاشة الترحيب (الرسالة التشجيعية)
 // ==========================================
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -184,12 +133,51 @@ class WelcomeScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text("مرحباً بك في غرفة الدراسة", textAlign: TextAlign.center, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
-              const SizedBox(height: 10),
-              const Text("Bienvenue dans Study Room", textAlign: TextAlign.center, style: TextStyle(fontSize: 16, color: Colors.white70)),
-              const SizedBox(height: 50),
-              const Text("اختر اللغة / Choisir la langue:", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+              const Icon(Icons.auto_stories, size: 80, color: Colors.white),
+              const SizedBox(height: 30),
+              const Text(
+                "أهلاً بك في غرفة الدراسة!",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
               const SizedBox(height: 20),
+              const Text(
+                "لقد اخترت المكان الصحيح. الدراسة هي مفتاح نجاحك، والنجاح ليس صعباً، بل يحتاج إلى القليل من التنظيم والصبر.\n\nهنا، سنساعدك على التركيز، والاسترخاء، والوصول إلى هدفك.",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 16, color: Colors.white70, height: 1.6),
+              ),
+              const SizedBox(height: 40),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LanguageScreen())),
+                  child: const Text("هل أنت مستعد للبدء؟", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ==========================================
+// 3. شاشة اختيار اللغة
+// ==========================================
+class LanguageScreen extends StatelessWidget {
+  const LanguageScreen({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(25.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text("اختر اللغة / Choisir la langue", textAlign: TextAlign.center, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
+              const SizedBox(height: 40),
               _buildLangButton(context, "العربية"),
               const SizedBox(height: 15),
               _buildLangButton(context, "Français"),
@@ -224,8 +212,8 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController _nameController = TextEditingController();
-  String _selectedLevel = "سنة أولى ثانوي";
-  final List<String> _levels = ["سنة أولى متوسط", "سنة ثانية متوسط", "سنة ثالثة متوسط", "سنة رابعة متوسط", "سنة أولى ثانوي", "سنة ثانية ثانوي", "سنة ثالثة ثانوي", "سنة أولى جامعي", "سنة ثانية جامعي", "سنة ثالثة جامعي"];
+  String _selectedLevel = "السنة الأولى ثانوي";
+  final List<String> _levels = ["السنة الأولى متوسط", "السنة الثانية متوسط", "السنة الثالثة متوسط", "السنة الرابعة متوسط", "السنة الأولى ثانوي", "السنة الثانية ثانوي", "السنة الثالثة ثانوي", "السنة الأولى جامعي", "السنة الثانية جامعي", "السنة الثالثة جامعي"];
 
   void _saveAndContinue() async {
     if (_nameController.text.trim().isEmpty) return;
@@ -274,21 +262,20 @@ class MainAppScreen extends StatefulWidget {
 
 class _MainAppScreenState extends State<MainAppScreen> {
   int _currentIndex = 0;
-  final List<Widget> _screens = [const RoomScreen(), const AIChatScreen(), const SettingsScreen()];
+  final List<Widget> _screens = [const RoomScreen(), const SettingsScreen()];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: _screens[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: const Color(0xFF1E1E1E), // خلفية الشريط السفلي
+        backgroundColor: const Color(0xFF1E1E1E),
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
         selectedItemColor: Colors.white,
         unselectedItemColor: Colors.grey[600],
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.timer), label: "الرئيسية"),
-          BottomNavigationBarItem(icon: Icon(Icons.smart_toy), label: "المساعد"),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: "الإعدادات"),
         ],
       ),
@@ -344,37 +331,38 @@ class _RoomScreenState extends State<RoomScreen> with SingleTickerProviderStateM
         else {
           _timer?.cancel();
           setState(() => isRunning = false);
-          _showProofDialog();
+          _showRelaxationDialog(); // هنا كتطلع شاشة الاسترخاء
         }
       });
     }
   }
 
-  void _showProofDialog() {
+  // نافذة الاسترخاء (بعد ما يكمل الوقت)
+  void _showRelaxationDialog() {
     showDialog(
       context: context,
-      barrierDismissible: false, 
+      barrierDismissible: false,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1E1E1E),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('خلص الوقت!', textAlign: TextAlign.center, style: TextStyle(color: Colors.white)),
-        content: const Text('لازم تصور درسك باش تثبت بلي كنت تقرا.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white70)),
+        title: const Text('أحسنت!', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+        content: const Text(
+          'لقد درست وبذلت جهداً كبيراً. عقلك يحتاج إلى قسط من الراحة ليعود أقوى.\n\nهل تريد أن تتنفس بعمق؟',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.white70, fontSize: 16),
+        ),
         actionsAlignment: MainAxisAlignment.center,
         actions: [
-          ElevatedButton(onPressed: () { Navigator.pop(context); _takePicture(); }, child: const Text('تصوير الدرس')),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context); // نسكرو النافذة
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const BreathingScreen())); // نروحو لشاشة التنفس
+            },
+            child: const Text('ابدأ التنفس', style: TextStyle(fontSize: 16)),
+          ),
         ],
       ),
     );
-  }
-
-  Future<void> _takePicture() async {
-    final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.camera);
-    if (image != null) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("تم تصوير الدرس بنجاح!")));
-    } else {
-      if (mounted) _showProofDialog(); 
-    }
   }
 
   @override
@@ -407,73 +395,83 @@ class _RoomScreenState extends State<RoomScreen> with SingleTickerProviderStateM
 }
 
 // ==========================================
-// 7. شاشة الذكاء الاصطناعي
+// 7. شاشة تمرين التنفس (10 ثواني شهيق، 10 ثواني زفير)
 // ==========================================
-class AIChatScreen extends StatefulWidget {
-  const AIChatScreen({super.key});
+class BreathingScreen extends StatefulWidget {
+  const BreathingScreen({super.key});
   @override
-  State<AIChatScreen> createState() => _AIChatScreenState();
+  State<BreathingScreen> createState() => _BreathingScreenState();
 }
 
-class _AIChatScreenState extends State<AIChatScreen> {
-  final TextEditingController _controller = TextEditingController();
-  final List<Map<String, String>> _messages = [
-    {"sender": "ai", "text": "مرحباً! أنا مساعدك الذكي. كيفاش نقدر نعاونك في دراستك اليوم؟"}
-  ];
+class _BreathingScreenState extends State<BreathingScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+  String _text = "شهيق (10 ثواني)";
+  bool _isInhaling = true;
+  int _secondsLeft = 10;
+  Timer? _timer;
 
-  void _sendMessage() {
-    if (_controller.text.trim().isEmpty) return;
-    setState(() {
-      _messages.add({"sender": "user", "text": _controller.text});
-      _messages.add({"sender": "ai", "text": "هذا رد تجريبي. في النسخة النهائية، راح نربطو مع ذكاء اصطناعي حقيقي!"});
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 10))..repeat(reverse: true);
+    _animation = Tween<double>(begin: 0.5, end: 1.0).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        if (_secondsLeft > 1) {
+          _secondsLeft--;
+        } else {
+          // نبدلو للزفير
+          _isInhaling = !_isInhaling;
+          _secondsLeft = 10;
+          _text = _isInhaling ? "شهيق (10 ثواني)" : "زفير (10 ثواني)";
+        }
+      });
     });
-    _controller.clear();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _timer?.cancel();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("المساعد الذكي", style: TextStyle(color: Colors.white)), backgroundColor: Colors.transparent, elevation: 0, centerTitle: true),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(15),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final msg = _messages[index];
-                bool isUser = msg["sender"] == "user";
-                return Align(
-                  alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: isUser ? Colors.white : const Color(0xFF1E1E1E),
-                      borderRadius: BorderRadius.only(
-                        topLeft: const Radius.circular(20),
-                        topRight: const Radius.circular(20),
-                        bottomLeft: isUser ? const Radius.circular(20) : const Radius.circular(0),
-                        bottomRight: isUser ? const Radius.circular(0) : const Radius.circular(20),
-                      ),
-                    ),
-                    child: Text(msg["text"]!, style: TextStyle(color: isUser ? Colors.black : Colors.white, fontSize: 16)),
+      backgroundColor: const Color(0xFF121212),
+      appBar: AppBar(title: const Text("الاسترخاء", style: TextStyle(color: Colors.white)), backgroundColor: Colors.transparent, elevation: 0, centerTitle: true),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(_text, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
+            const SizedBox(height: 20),
+            Text("$_secondsLeft", style: const TextStyle(fontSize: 60, fontWeight: FontWeight.bold, color: Colors.white)),
+            const SizedBox(height: 40),
+            AnimatedBuilder(
+              animation: _animation,
+              builder: (context, child) {
+                return Container(
+                  width: 200 * _animation.value,
+                  height: 200 * _animation.value,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.2),
+                    border: Border.all(color: Colors.white, width: 2),
                   ),
                 );
               },
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: Row(
-              children: [
-                Expanded(child: TextField(controller: _controller, decoration: const InputDecoration(hintText: "اكتب سؤالك هنا...", hintStyle: TextStyle(color: Colors.white54)))),
-                const SizedBox(width: 10),
-                CircleAvatar(backgroundColor: Colors.white, child: IconButton(icon: const Icon(Icons.send, color: Colors.black, size: 20), onPressed: _sendMessage)),
-              ],
+            const SizedBox(height: 60),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("إنهاء التمرين", style: TextStyle(fontSize: 18)),
             ),
-          )
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -485,4 +483,16 @@ class _AIChatScreenState extends State<AIChatScreen> {
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
   @override
-  Widget bu
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("الإعدادات", style: TextStyle(color: Colors.white)), backgroundColor: Colors.transparent, elevation: 0, centerTitle: true),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          const ListTile(leading: Icon(Icons.security, color: Colors.white), title: Text("الخصوصية والأمان", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white))),
+          const Divider(color: Colors.white24),
+          ListTile(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+            leading: const Icon(Icons.privacy_tip, color: Colors.white),
+            title: const Text("سياسة الخصوصية", style: TextStyle(color: Colors.white)),
+    
