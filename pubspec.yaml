@@ -1,5 +1,5 @@
 name: study_with_sindu
-description: A professional task manager built with Flutter.
+description: A professional task manager.
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -10,6 +10,14 @@ dependencies:
   flutter:
     sdk: flutter
   shared_preferences: ^2.2.2
+  image_picker: ^1.0.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
 
 flutter:
   uses-material-design: true
+  assets:
+    - ghost.png
