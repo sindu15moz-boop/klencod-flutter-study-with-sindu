@@ -689,7 +689,7 @@ class _BreathingScreenState extends State<BreathingScreen> with SingleTickerProv
     );
   }
 }
-،class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends StatefulWidget {
   final int themeMode;
   final Function(int) onThemeChange;
   const SettingsScreen({super.key, required this.themeMode, required this.onThemeChange});
