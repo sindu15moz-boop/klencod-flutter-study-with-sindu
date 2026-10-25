@@ -410,3 +410,66 @@ Widget _buildBreakButton(int minutes, Color textColor) {
     child: Text("$minutes د", style: TextStyle(fontSize: 14, color: textColor.withOpacity(0.8), fontWeight: FontWeight.w300)),
   );
 }
+void _showBreakEndDialog() {
+  Color textColor = widget.themeMode == 2 ? Colors.black : Colors.white;
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) => AlertDialog(
+      backgroundColor: widget.themeMode == 0 ? const Color(0xFF1E1E1E) : (widget.themeMode == 1 ? const Color(0xFF616161) : Colors.white),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+      title: Text('خلصت الراحة!', textAlign: TextAlign.center, style: TextStyle(color: textColor, fontSize: 24, fontWeight: FontWeight.w300)),
+      content: Text('أتمنى أنك ارتحت. يالاه نعاودو نقراو ونركزو!', textAlign: TextAlign.center, style: TextStyle(color: textColor.withOpacity(0.7), fontSize: 16)),
+      actionsAlignment: MainAxisAlignment.center,
+      actions: [
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: textColor,
+            foregroundColor: widget.themeMode == 2 ? Colors.white : Colors.black,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
+            elevation: 0,
+          ),
+          onPressed: () {
+            Navigator.pop(context);
+            setState(() {
+              seconds = 1500;
+              isBreak = false;
+            });
+          },
+          child: const Text('العودة للدراسة', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400)),
+        ),
+      ],
+    ),
+  );
+}
+
+void _showLiveDialog() {
+  final codeController = TextEditingController();
+  Color textColor = widget.themeMode == 2 ? Colors.black : Colors.white;
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      backgroundColor: widget.themeMode == 0 ? const Color(0xFF1E1E1E) : (widget.themeMode == 1 ? const Color(0xFF616161) : Colors.white),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+      title: Text('الدراسة الجماعية', textAlign: TextAlign.center, style: TextStyle(color: textColor, fontWeight: FontWeight.w300)),
+      content: TextField(
+        controller: codeController,
+        decoration: const InputDecoration(labelText: "أدخل كود الغرفة", prefixIcon: Icon(Icons.group_outlined)),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("تم الدخول للغرفة! (نسخة تجريبية)")));
+          },
+          child: Text('دخول', style: TextStyle(color: textColor)),
+        ),
+      ],
+    ),
+  );
+}
+
+@override
+void dispose() { _timer?.cancel(); _controller.dispose(); super.dispose(); }
+  
