@@ -229,29 +229,47 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
+          ],
+        ),
+      ),
+    );
+  }
+}
 class MainAppScreen extends StatefulWidget {
-  const MainAppScreen({super.key});
+  final int themeMode;
+  final Function(int) onThemeChange;
+  const MainAppScreen({super.key, required this.themeMode, required this.onThemeChange});
   @override
   State<MainAppScreen> createState() => _MainAppScreenState();
 }
 
 class _MainAppScreenState extends State<MainAppScreen> {
   int _currentIndex = 0;
-  final List<Widget> _screens = [const RoomScreen(), const SettingsScreen()];
 
   @override
   Widget build(BuildContext context) {
+    Color textColor = widget.themeMode == 2 ? Colors.black : Colors.white;
+    Color navBg = widget.themeMode == 0 ? const Color(0xFF121212) : (widget.themeMode == 1 ? const Color(0xFF424242) : Colors.white);
+
+    final screens = [
+      RoomScreen(themeMode: widget.themeMode, onThemeChange: widget.onThemeChange),
+      SettingsScreen(themeMode: widget.themeMode, onThemeChange: widget.onThemeChange),
+    ];
+
     return Scaffold(
-      body: _screens[_currentIndex],
+      body: screens[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: const Color(0xFF1E1E1E),
+        backgroundColor: navBg,
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
-        selectedItemColor: Colors.white,
-        unselectedItemColor: Colors.grey[600],
+        selectedItemColor: textColor,
+        unselectedItemColor: textColor.withOpacity(0.4),
+        selectedFontSize: 12,
+        unselectedFontSize: 12,
+        type: BottomNavigationBarType.fixed,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.timer), label: "الرئيسية"),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: "الإعدادات"),
+          BottomNavigationBarItem(icon: Icon(Icons.timer_outlined), activeIcon: Icon(Icons.timer), label: "الرئيسية"),
+          BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), activeIcon: Icon(Icons.settings), label: "الإعدادات"),
         ],
       ),
     );
@@ -259,7 +277,9 @@ class _MainAppScreenState extends State<MainAppScreen> {
 }
 
 class RoomScreen extends StatefulWidget {
-  const RoomScreen({super.key});
+  final int themeMode;
+  final Function(int) onThemeChange;
+  const RoomScreen({super.key, required this.themeMode, required this.onThemeChange});
   @override
   State<RoomScreen> createState() => _RoomScreenState();
 }
@@ -267,6 +287,7 @@ class RoomScreen extends StatefulWidget {
 class _RoomScreenState extends State<RoomScreen> with SingleTickerProviderStateMixin {
   int seconds = 1500;
   bool isRunning = false;
+  bool isBreak = false;
   Timer? _timer;
   late AnimationController _controller;
   late Animation<double> _animation;
@@ -290,208 +311,3 @@ class _RoomScreenState extends State<RoomScreen> with SingleTickerProviderStateM
     int s = seconds % 60;
     return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
-
-  void _toggleTimer() {
-    if (isRunning) {
-      _timer?.cancel();
-      setState(() => isRunning = false);
-    } else {
-      if (seconds == 0) return;
-      setState(() => isRunning = true);
-      _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-        if (seconds > 0) { setState(() => seconds--); } 
-        else {
-          _timer?.cancel();
-          setState(() => isRunning = false);
-          _showRelaxationDialog();
-        }
-      });
-    }
-  }
-
-  void _showRelaxationDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E1E),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('أحسنت!', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
-        content: const Text('لقد درست وبذلت جهداً كبيراً. عقلك يحتاج إلى قسط من الراحة ليعود أقوى.\n\nهل تريد أن تتنفس بعمق؟', textAlign: TextAlign.center, style: TextStyle(color: Colors.white70, fontSize: 16)),
-        actionsAlignment: MainAxisAlignment.center,
-        actions: [
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const BreathingScreen()));
-            },
-            child: const Text('ابدأ التنفس', style: TextStyle(fontSize: 16)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  @override
-  void dispose() { _timer?.cancel(); _controller.dispose(); super.dispose(); }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("مرحباً $_studentName", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)), backgroundColor: Colors.transparent, elevation: 0, centerTitle: true),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AnimatedBuilder(
-              animation: _animation,
-              builder: (context, child) => Transform.translate(
-                offset: Offset(0, _animation.value),
-                child: Image.asset('ghost.png', height: 300, fit: BoxFit.contain, errorBuilder: (c, e, s) => const Text("الصورة غير موجودة", style: TextStyle(color: Colors.white))),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(timerText, style: const TextStyle(fontSize: 60, fontWeight: FontWeight.w300, color: Colors.white, letterSpacing: 2)),
-            const SizedBox(height: 30),
-            ElevatedButton(onPressed: _toggleTimer, child: Text(isRunning ? "إيقاف" : "بدء", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
-          ],
-        ),
-      ),
-    );
-  }
-}
-class BreathingScreen extends StatefulWidget {
-  const BreathingScreen({super.key});
-  @override
-  State<BreathingScreen> createState() => _BreathingScreenState();
-}
-
-class _BreathingScreenState extends State<BreathingScreen> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-  String _text = "شهيق";
-  bool _isInhaling = true;
-  int _secondsLeft = 10;
-  Timer? _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 10))..repeat(reverse: true);
-    _animation = Tween<double>(begin: 0.5, end: 1.0).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        if (_secondsLeft > 1) {
-          _secondsLeft--;
-        } else {
-          _isInhaling = !_isInhaling;
-          _secondsLeft = 10;
-          _text = _isInhaling ? "شهيق" : "زفير";
-        }
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF121212),
-      appBar: AppBar(title: const Text("الاسترخاء", style: TextStyle(color: Colors.white)), backgroundColor: Colors.transparent, elevation: 0, centerTitle: true),
-      body: Padding(
-        padding: const EdgeInsets.all(25.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AnimatedBuilder(
-              animation: _animation,
-              builder: (context, child) {
-                return Container(
-                  width: 200 * _animation.value,
-                  height: 200 * _animation.value,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.1),
-                    border: Border.all(color: Colors.white, width: 2),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 40),
-            Text("$_secondsLeft", style: const TextStyle(fontSize: 60, fontWeight: FontWeight.bold, color: Colors.white)),
-            const SizedBox(height: 40),
-            LinearProgressIndicator(
-              value: (10 - _secondsLeft) / 10,
-              backgroundColor: Colors.white24,
-              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-              minHeight: 10,
-            ),
-            const SizedBox(height: 20),
-            Text(_text, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
-            const SizedBox(height: 60),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("إنهاء التمرين", style: TextStyle(fontSize: 18)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("الإعدادات", style: TextStyle(color: Colors.white)), backgroundColor: Colors.transparent, elevation: 0, centerTitle: true),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          const ListTile(leading: Icon(Icons.security, color: Colors.white), title: Text("الخصوصية والأمان", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white))),
-          const Divider(color: Colors.white24),
-          ListTile(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-            leading: const Icon(Icons.privacy_tip, color: Colors.white),
-            title: const Text("سياسة الخصوصية", style: TextStyle(color: Colors.white)),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.white54),
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PrivacyPolicyScreen())),
-          ),
-          const Divider(color: Colors.white24),
-          const ListTile(leading: Icon(Icons.storage, color: Colors.white), title: Text("تخزين البيانات", style: TextStyle(color: Colors.white)), subtitle: Text("جميع بياناتك تحفظ في هاتفك فقط.", style: TextStyle(color: Colors.white70))),
-        ],
-      ),
-    );
-  }
-}
-
-class PrivacyPolicyScreen extends StatelessWidget {
-  const PrivacyPolicyScreen({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("سياسة الخصوصية", style: TextStyle(color: Colors.white)), backgroundColor: Colors.transparent, elevation: 0, centerTitle: true),
-                  body: const Padding(
-        padding: EdgeInsets.all(25.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text("خصوصيتك تهمنا", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
-              SizedBox(height: 15),
-              Text("1. التطبيق لا يقوم بتسجيل أي بيانات شخصية أو إرسالها لأي جهة خارجية.\n\n2. جميع التسجيلات الصوتية والصور يتم تخزينها محلياً على هاتفك فقط.\n\n3. لا يوجد أي تتبع لموقعك أو مراقبة لاستخدامك.\n\n4. التطبيق صديق للبيئة وللطلبة، وهدفه مساعدتك على التركيز.", style: TextStyle(fontSize: 16, height: 1.6, color: Colors.white70)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
