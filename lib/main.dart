@@ -311,3 +311,102 @@ class _RoomScreenState extends State<RoomScreen> with SingleTickerProviderStateM
     int s = seconds % 60;
     return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
+void _setTime(int minutes) {
+  if (!isRunning) {
+    setState(() {
+      seconds = minutes * 60;
+      isBreak = false;
+    });
+  }
+}
+
+void _startBreak(int minutes) {
+  setState(() {
+    seconds = minutes * 60;
+    isBreak = true;
+    isRunning = false;
+  });
+}
+
+void _toggleTimer() {
+  if (isRunning) {
+    _timer?.cancel();
+    setState(() => isRunning = false);
+  } else {
+    if (seconds == 0) return;
+    setState(() => isRunning = true);
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (seconds > 0) { setState(() => seconds--); } 
+      else {
+        _timer?.cancel();
+        setState(() => isRunning = false);
+        if (isBreak) {
+          _showBreakEndDialog();
+        } else {
+          _saveStudyTime();
+          _showRelaxationDialog();
+        }
+      }
+    });
+  }
+}
+
+void _saveStudyTime() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  int current = prefs.getInt('total_study_minutes') ?? 0;
+  int studied = (1500 - seconds) ~/ 60;
+  await prefs.setInt('total_study_minutes', current + studied);
+}
+
+void _showRelaxationDialog() {
+  Color textColor = widget.themeMode == 2 ? Colors.black : Colors.white;
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) => AlertDialog(
+      backgroundColor: widget.themeMode == 0 ? const Color(0xFF1E1E1E) : (widget.themeMode == 1 ? const Color(0xFF616161) : Colors.white),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+      title: Text('أحسنت!', textAlign: TextAlign.center, style: TextStyle(color: textColor, fontSize: 24, fontWeight: FontWeight.w300)),
+      content: Text('لقد درست وبذلت جهداً كبيراً. اختر مدة الراحة التي تناسبك:', textAlign: TextAlign.center, style: TextStyle(color: textColor.withOpacity(0.7), fontSize: 16)),
+      actionsAlignment: MainAxisAlignment.center,
+      actions: [
+        Wrap(
+          spacing: 10,
+          children: [
+            _buildBreakButton(5, textColor),
+            _buildBreakButton(10, textColor),
+            _buildBreakButton(15, textColor),
+            _buildBreakButton(20, textColor),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 15.0),
+          child: OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: textColor.withOpacity(0.3), width: 1),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            ),
+            onPressed: () => Navigator.pop(context),
+            child: Text('تخطي الراحة', style: TextStyle(color: textColor.withOpacity(0.6), fontSize: 14, fontWeight: FontWeight.w300)),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+Widget _buildBreakButton(int minutes, Color textColor) {
+  return OutlinedButton(
+    style: OutlinedButton.styleFrom(
+      side: BorderSide(color: textColor.withOpacity(0.3), width: 1),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+    ),
+    onPressed: () {
+      Navigator.pop(context);
+      _startBreak(minutes);
+    },
+    child: Text("$minutes د", style: TextStyle(fontSize: 14, color: textColor.withOpacity(0.8), fontWeight: FontWeight.w300)),
+  );
+}
