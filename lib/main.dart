@@ -773,4 +773,4 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
-class AboutScreen extends StatelessWidget
+class AboutScreen extends StatelessWidget {
