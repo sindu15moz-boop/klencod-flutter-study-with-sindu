@@ -774,3 +774,56 @@ class _SettingsScreenState extends State<SettingsScreen> {
 }
 
 class AboutScreen extends StatelessWidget {
+  final int themeMode;
+  const AboutScreen({super.key, required this.themeMode});
+
+  @override
+  Widget build(BuildContext context) {
+    Color textColor = themeMode == 2 ? Colors.black : Colors.white;
+    return Scaffold(
+      appBar: AppBar(title: Text("حول التطبيق", style: TextStyle(color: textColor, fontWeight: FontWeight.w300)), backgroundColor: Colors.transparent, elevation: 0, centerTitle: true),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.school_outlined, size: 80, color: textColor),
+            const SizedBox(height: 20),
+            Text("Study Room", style: TextStyle(fontSize: 26, fontWeight: FontWeight.w300, color: textColor)),
+            const SizedBox(height: 10),
+            Text("الإصدار: 1.0.0", style: TextStyle(fontSize: 16, color: textColor.withOpacity(0.7), fontWeight: FontWeight.w300)),
+            const SizedBox(height: 5),
+            Text("المطور: بن مزوز رحاب", style: TextStyle(fontSize: 16, color: textColor.withOpacity(0.7), fontWeight: FontWeight.w300)),
+            const SizedBox(height: 5),
+            Text("البلد: الجزائر 🇩🇿", style: TextStyle(fontSize: 16, color: textColor.withOpacity(0.7), fontWeight: FontWeight.w300)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class PrivacyPolicyScreen extends StatelessWidget {
+  final int themeMode;
+  const PrivacyPolicyScreen({super.key, required this.themeMode});
+
+  @override
+  Widget build(BuildContext context) {
+    Color textColor = themeMode == 2 ? Colors.black : Colors.white;
+    return Scaffold(
+      appBar: AppBar(title: Text("سياسة الخصوصية", style: TextStyle(color: textColor, fontWeight: FontWeight.w300)), backgroundColor: Colors.transparent, elevation: 0, centerTitle: true),
+      body: Padding(
+        padding: const EdgeInsets.all(25.0),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("خصوصيتك تهمنا", style: TextStyle(fontSize: 22, fontWeight: FontWeight.w300, color: textColor)),
+              const SizedBox(height: 15),
+              Text("1. التطبيق لا يقوم بتسجيل أي بيانات شخصية أو إرسالها لأي جهة خارجية.\n\n2. جميع التسجيلات الصوتية والصور يتم تخزينها محلياً على هاتفك فقط.\n\n3. لا يوجد أي تتبع لموقعك أو مراقبة لاستخدامك.\n\n4. التطبيق صديق للبيئة وللطلبة، وهدفه مساعدتك على التركيز.", style: TextStyle(fontSize: 16, height: 1.6, color: textColor.withOpacity(0.7), fontWeight: FontWeight.w300)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
