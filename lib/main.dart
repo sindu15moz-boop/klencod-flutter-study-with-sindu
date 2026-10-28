@@ -794,3 +794,137 @@ class _RoomScreenState extends State<RoomScreen> with SingleTickerProviderStateM
 
   @override
   void dispose() { _timer?.cancel(); _controller.dispose(); super.dispose(); }
+  @override
+  Widget build(BuildContext context) {
+    Color textColor = widget.themeMode >= 2 ? Colors.black : Colors.white;
+    return Scaffold(
+      appBar: isFocusMode ? null : AppBar(
+        title: Text(isBreak ? "وقت الراحة" : "مرحباً $_studentName", style: TextStyle(color: textColor, fontWeight: FontWeight.w300)), 
+        backgroundColor: Colors.transparent, 
+        elevation: 0, 
+        centerTitle: true,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 15.0),
+            child: Center(
+              child: Text("🔥 $streak", style: TextStyle(color: Colors.orange, fontSize: 18, fontWeight: FontWeight.bold)),
+            ),
+          )
+        ],
+      ),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'ghost.png',
+              fit: BoxFit.cover,
+              errorBuilder: (c, e, s) => Container(color: Colors.black12),
+            ),
+          ),
+          Positioned.fill(
+            child: Container(color: isFocusMode ? Colors.black.withOpacity(0.8) : Colors.black.withOpacity(0.3)),
+          ),
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (isFocusMode)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 20),
+                    child: Text(
+                      "راك في وضع التركيز... ركز في القراية!",
+                      style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                
+                Text(
+                  timerText,
+                  style: TextStyle(fontSize: 80, fontWeight: FontWeight.w300, color: Colors.white, letterSpacing: 2),
+                ),
+                const SizedBox(height: 20),
+                
+                if (!isRunning && !isBreak && !isFocusMode)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildCircleTimeButton(15, textColor),
+                      _buildCircleTimeButton(25, textColor),
+                      _buildCircleTimeButton(45, textColor),
+                      _buildCircleTimeButton(60, textColor),
+                    ],
+                  ),
+                
+                const SizedBox(height: 30),
+                
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
+                    shape: const CircleBorder(),
+                    padding: const EdgeInsets.all(25),
+                    elevation: 5,
+                  ),
+                  onPressed: _toggleTimer, 
+                  child: Icon(isRunning ? Icons.pause : Icons.play_arrow, size: 40),
+                ),
+                
+                const SizedBox(height: 30),
+                
+                if (!isFocusMode) ...[
+                  TextButton.icon(
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => BreathingScreen(themeMode: widget.themeMode)));
+                    },
+                    icon: const Icon(Icons.air, color: Colors.white),
+                    label: const Text("تمرين التنفس", style: TextStyle(color: Colors.white)),
+                  ),
+                  const SizedBox(height: 10),
+                  TextButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        isFocusMode = true;
+                      });
+                    },
+                    icon: const Icon(Icons.center_focus_strong, color: Colors.orange),
+                    label: const Text("التركيز العميق", style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold)),
+                  ),
+                ] else ...[
+                  TextButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        isFocusMode = false;
+                      });
+                    },
+                    icon: const Icon(Icons.exit_to_app, color: Colors.redAccent),
+                    label: const Text("خروج من وضع التركيز", style: TextStyle(color: Colors.redAccent)),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCircleTimeButton(int minutes, Color textColor) {
+    bool isSelected = seconds == minutes * 60 && !isBreak;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: GestureDetector(
+        onTap: () => _setTime(minutes),
+        child: CircleAvatar(
+          radius: 25,
+          backgroundColor: isSelected ? textColor : Colors.white.withOpacity(0.2),
+          child: Text(
+            "$minutes",
+            style: TextStyle(
+              color: isSelected ? (widget.themeMode >= 2 ? Colors.white : Colors.black) : Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
