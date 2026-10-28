@@ -22,9 +22,9 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-  - ghost.png
-  - noise1.mp3
-  - noise2.mp3
-  - ocean.mp3
-  - rain1.mp3
-  - rain2.mp3
+    - ghost.png
+    - noise1.mp3
+    - noise2.mp3
+    - ocean.mp3
+    - rain1.mp3
+    - rain2.mp3
