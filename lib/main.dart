@@ -928,3 +928,295 @@ class _RoomScreenState extends State<RoomScreen> with SingleTickerProviderStateM
     );
   }
 }
+class BreathingScreen extends StatefulWidget {
+  final int themeMode;
+  const BreathingScreen({super.key, required this.themeMode});
+  @override
+  State<BreathingScreen> createState() => _BreathingScreenState();
+}
+
+class _BreathingScreenState extends State<BreathingScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+  String _text = "شهيق";
+  bool _isInhaling = true;
+  int _secondsLeft = 10;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 10))..repeat(reverse: true);
+    _animation = Tween<double>(begin: 0.5, end: 1.0).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        if (_secondsLeft > 1) {
+          _secondsLeft--;
+        } else {
+          _isInhaling = !_isInhaling;
+          _secondsLeft = 10;
+          _text = _isInhaling ? "شهيق" : "زفير";
+        }
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Color textColor = widget.themeMode >= 2 ? Colors.black : Colors.white;
+    return Scaffold(
+      backgroundColor: widget.themeMode == 0 ? const Color(0xFF121212) : (widget.themeMode == 1 ? const Color(0xFF424242) : (widget.themeMode == 2 ? const Color(0xFFE0F7FA) : (widget.themeMode == 3 ? const Color(0xFFE8F5E9) : Colors.white))),
+      appBar: AppBar(title: Text("الاسترخاء", style: TextStyle(color: textColor, fontWeight: FontWeight.w300)), backgroundColor: Colors.transparent, elevation: 0, centerTitle: true),
+      body: Padding(
+        padding: const EdgeInsets.all(25.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AnimatedBuilder(
+              animation: _animation,
+              builder: (context, child) {
+                return Container(
+                  width: 200 * _animation.value,
+                  height: 200 * _animation.value,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: textColor.withOpacity(0.1),
+                    border: Border.all(color: textColor.withOpacity(0.5), width: 2),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 40),
+            Text("$_secondsLeft", style: TextStyle(fontSize: 60, fontWeight: FontWeight.w300, color: textColor)),
+            const SizedBox(height: 40),
+            LinearProgressIndicator(
+              value: (10 - _secondsLeft) / 10,
+              backgroundColor: textColor.withOpacity(0.1),
+              valueColor: AlwaysStoppedAnimation<Color>(textColor),
+              minHeight: 10,
+            ),
+            const SizedBox(height: 20),
+            Text(_text, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w300, color: textColor)),
+            const SizedBox(height: 60),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: textColor,
+                foregroundColor: widget.themeMode >= 2 ? Colors.white : Colors.black,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                elevation: 0,
+              ),
+              onPressed: () => Navigator.pop(context),
+              child: const Text("إنهاء التمرين", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w400)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class SoundScreen extends StatefulWidget {
+  final int themeMode;
+  const SoundScreen({super.key, required this.themeMode});
+  @override
+  State<SoundScreen> createState() => _SoundScreenState();
+}
+
+class _SoundScreenState extends State<SoundScreen> {
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  String? _playingSound;
+
+  void _playSound(String fileName) async {
+    if (_playingSound == fileName) {
+      await _audioPlayer.stop();
+      setState(() => _playingSound = null);
+    } else {
+      await _audioPlayer.stop();
+      await _audioPlayer.play(AssetSource('assets/$fileName'));
+      setState(() => _playingSound = fileName);
+    }
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Color textColor = widget.themeMode >= 2 ? Colors.black : Colors.white;
+    return Scaffold(
+      appBar: AppBar(title: Text("أصوات الطبيعة", style: TextStyle(color: textColor, fontWeight: FontWeight.w300)), backgroundColor: Colors.transparent, elevation: 0, centerTitle: true),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          _buildSoundTile("المطر (1)", "rain1.mp3", textColor),
+          _buildSoundTile("المطر (2)", "rain2.mp3", textColor),
+          _buildSoundTile("البحر", "ocean.mp3", textColor),
+          _buildSoundTile("الضوضاء (1)", "noise1.mp3", textColor),
+          _buildSoundTile("الضوضاء (2)", "noise2.mp3", textColor),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSoundTile(String title, String fileName, Color textColor) {
+    bool isPlaying = _playingSound == fileName;
+    return ListTile(
+      leading: Icon(isPlaying ? Icons.stop_circle_outlined : Icons.play_circle_outline, color: textColor),
+      title: Text(title, style: TextStyle(color: textColor)),
+      onTap: () => _playSound(fileName),
+    );
+  }
+}
+
+class SettingsScreen extends StatefulWidget {
+  final int themeMode;
+  final Function(int) onThemeChange;
+  const SettingsScreen({super.key, required this.themeMode, required this.onThemeChange});
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  int totalMinutes = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStats();
+  }
+
+  void _loadStats() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() => totalMinutes = prefs.getInt('total_study_minutes') ?? 0);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Color textColor = widget.themeMode >= 2 ? Colors.black : Colors.white;
+    return Scaffold(
+      appBar: AppBar(title: Text("الإعدادات", style: TextStyle(color: textColor, fontWeight: FontWeight.w300)), backgroundColor: Colors.transparent, elevation: 0, centerTitle: true),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          ListTile(leading: Icon(Icons.palette_outlined, color: textColor), title: Text("تغيير الألوان", style: TextStyle(color: textColor, fontWeight: FontWeight.w300))),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildColorButton(0, Colors.black, textColor),
+              _buildColorButton(1, Colors.grey, textColor),
+              _buildColorButton(2, const Color(0xFFE0F7FA), textColor), 
+              _buildColorButton(3, const Color(0xFFE8F5E9), textColor), 
+              _buildColorButton(4, Colors.white, textColor),
+            ],
+          ),
+          const Divider(color: Colors.white24),
+          ListTile(leading: Icon(Icons.security_outlined, color: textColor), title: Text("الخصوصية والأمان", style: TextStyle(fontWeight: FontWeight.w300, color: textColor))),
+          const Divider(color: Colors.white24),
+          ListTile(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+            leading: Icon(Icons.privacy_tip_outlined, color: textColor),
+            title: Text("سياسة الخصوصية", style: TextStyle(color: textColor, fontWeight: FontWeight.w300)),
+            trailing: Icon(Icons.arrow_forward_ios, size: 16, color: textColor.withOpacity(0.5)),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => PrivacyPolicyScreen(themeMode: widget.themeMode))),
+          ),
+          const Divider(color: Colors.white24),
+          ListTile(
+            leading: Icon(Icons.bar_chart_outlined, color: textColor),
+            title: Text("سجل وقت الدراسة", style: TextStyle(color: textColor, fontWeight: FontWeight.w300)),
+            subtitle: Text("لقد درست $totalMinutes دقيقة حتى الآن", style: TextStyle(color: textColor.withOpacity(0.7), fontWeight: FontWeight.w300)),
+          ),
+          const Divider(color: Colors.white24),
+          ListTile(
+            leading: Icon(Icons.info_outline, color: textColor),
+            title: Text("حول التطبيق", style: TextStyle(color: textColor, fontWeight: FontWeight.w300)),
+            trailing: Icon(Icons.arrow_forward_ios, size: 16, color: textColor.withOpacity(0.5)),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => AboutScreen(themeMode: widget.themeMode))),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildColorButton(int mode, Color color, Color textColor) {
+    bool isSelected = widget.themeMode == mode;
+    return GestureDetector(
+      onTap: () => widget.onThemeChange(mode),
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+          border: Border.all(color: isSelected ? Colors.green : textColor.withOpacity(0.2), width: isSelected ? 3 : 1),
+        ),
+      ),
+    );
+  }
+}
+
+class AboutScreen extends StatelessWidget {
+  final int themeMode;
+  const AboutScreen({super.key, required this.themeMode});
+
+  @override
+  Widget build(BuildContext context) {
+    Color textColor = themeMode >= 2 ? Colors.black : Colors.white;
+    return Scaffold(
+      appBar: AppBar(title: Text("حول التطبيق", style: TextStyle(color: textColor, fontWeight: FontWeight.w300)), backgroundColor: Colors.transparent, elevation: 0, centerTitle: true),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.school_outlined, size: 80, color: textColor),
+            const SizedBox(height: 20),
+            Text("Study Room", style: TextStyle(fontSize: 26, fontWeight: FontWeight.w300, color: textColor)),
+            const SizedBox(height: 10),
+            Text("الإصدار: 1.0.0", style: TextStyle(fontSize: 16, color: textColor.withOpacity(0.7), fontWeight: FontWeight.w300)),
+            const SizedBox(height: 5),
+            Text("المطور: بن مزوز رحاب", style: TextStyle(fontSize: 16, color: textColor.withOpacity(0.7), fontWeight: FontWeight.w300)),
+            const SizedBox(height: 5),
+            Text("البلد: الجزائر 🇩🇿", style: TextStyle(fontSize: 16, color: textColor.withOpacity(0.7), fontWeight: FontWeight.w300)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class PrivacyPolicyScreen extends StatelessWidget {
+  final int themeMode;
+  const PrivacyPolicyScreen({super.key, required this.themeMode});
+
+  @override
+  Widget build(BuildContext context) {
+    Color textColor = themeMode >= 2 ? Colors.black : Colors.white;
+    return Scaffold(
+      appBar: AppBar(title: Text("سياسة الخصوصية", style: TextStyle(color: textColor, fontWeight: FontWeight.w300)), backgroundColor: Colors.transparent, elevation: 0, centerTitle: true),
+      body: Padding(
+        padding: const EdgeInsets.all(25.0),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("خصوصيتك تهمنا", style: TextStyle(fontSize: 22, fontWeight: FontWeight.w300, color: textColor)),
+              const SizedBox(height: 15),
+              Text("1. التطبيق لا يقوم بتسجيل أي بيانات شخصية أو إرسالها لأي جهة خارجية.\n\n2. جميع التسجيلات الصوتية والصور يتم تخزينها محلياً على هاتفك فقط.\n\n3. لا يوجد أي تتبع لموقعك أو مراقبة لاستخدامك.\n\n4. التطبيق صديق للبيئة وللطلبة، وهدفه مساعدتك على التركيز.", style: TextStyle(fontSize: 16, height: 1.6, color: textColor.withOpacity(0.7), fontWeight: FontWeight.w300)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
