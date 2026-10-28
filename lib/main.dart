@@ -178,3 +178,130 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 }
+class WelcomeScreen extends StatelessWidget {
+  final int themeMode;
+  final Function(int) onThemeChange;
+  const WelcomeScreen({super.key, required this.themeMode, required this.onThemeChange});
+
+  @override
+  Widget build(BuildContext context) {
+    Color textColor = themeMode >= 2 ? Colors.black : Colors.white;
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(25.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.auto_stories_outlined, size: 80, color: textColor),
+              const SizedBox(height: 30),
+              Text("أهلاً بك في غرفة الدراسة!", textAlign: TextAlign.center, style: TextStyle(fontSize: 26, fontWeight: FontWeight.w300, color: textColor)),
+              const SizedBox(height: 20),
+              Text("لقد اخترت المكان الصحيح. الدراسة هي مفتاح نجاحك، والنجاح ليس صعباً، بل يحتاج إلى القليل من التنظيم والصبر.\n\nهنا، سنساعدك على التركيز، والاسترخاء، والوصول إلى هدفك.", textAlign: TextAlign.center, style: TextStyle(fontSize: 16, color: textColor.withOpacity(0.7), height: 1.6)),
+              const SizedBox(height: 40),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LanguageScreen(themeMode: themeMode, onThemeChange: onThemeChange))),
+                  child: const Text("هل أنت مستعد للبدء؟", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w400)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class LanguageScreen extends StatelessWidget {
+  final int themeMode;
+  final Function(int) onThemeChange;
+  const LanguageScreen({super.key, required this.themeMode, required this.onThemeChange});
+
+  @override
+  Widget build(BuildContext context) {
+    Color textColor = themeMode >= 2 ? Colors.black : Colors.white;
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(25.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text("اختر اللغة / Choisir la langue", textAlign: TextAlign.center, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w300, color: textColor)),
+              const SizedBox(height: 40),
+              _buildLangButton(context, "العربية"),
+              const SizedBox(height: 15),
+              _buildLangButton(context, "Français"),
+              const SizedBox(height: 15),
+              _buildLangButton(context, "English"),
+              const SizedBox(height: 15),
+              _buildLangButton(context, "الدارجة"),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLangButton(BuildContext context, String label) {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton(
+        onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProfileScreen(themeMode: themeMode, onThemeChange: onThemeChange))),
+        child: Text(label, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w400)),
+      ),
+    );
+  }
+}
+
+class ProfileScreen extends StatefulWidget {
+  final int themeMode;
+  final Function(int) onThemeChange;
+  const ProfileScreen({super.key, required this.themeMode, required this.onThemeChange});
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  final TextEditingController _nameController = TextEditingController();
+  String _selectedLevel = "السنة الأولى ثانوي";
+  final List<String> _levels = ["السنة الأولى متوسط", "السنة الثانية متوسط", "السنة الثالثة متوسط", "السنة الرابعة متوسط", "السنة الأولى ثانوي", "السنة الثانية ثانوي", "السنة الثالثة ثانوي", "السنة الأولى جامعي", "السنة الثانية جامعي", "السنة الثالثة جامعي"];
+
+  void _saveAndContinue() async {
+    if (_nameController.text.trim().isEmpty) return;
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('student_name', _nameController.text.trim());
+    await prefs.setString('student_level', _selectedLevel);
+    if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => MainAppScreen(themeMode: widget.themeMode, onThemeChange: widget.onThemeChange)));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Color textColor = widget.themeMode >= 2 ? Colors.black : Colors.white;
+    return Scaffold(
+      appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0, iconTheme: IconThemeData(color: textColor)),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(25.0),
+        child: Column(
+          children: [
+            Text("معلومات الطالب", style: TextStyle(fontSize: 24, fontWeight: FontWeight.w300, color: textColor)),
+            const SizedBox(height: 30),
+            TextField(controller: _nameController, decoration: const InputDecoration(labelText: "الاسم الكامل", prefixIcon: Icon(Icons.person_outline))),
+            const SizedBox(height: 20),
+            DropdownButtonFormField<String>(
+              value: _selectedLevel,
+              decoration: const InputDecoration(labelText: "المستوى الدراسي", prefixIcon: Icon(Icons.school_outlined)),
+              items: _levels.map((String level) => DropdownMenuItem<String>(value: level, child: Text(level, style: TextStyle(color: textColor, fontWeight: FontWeight.w300)))).toList(),
+              onChanged: (String? newValue) => setState(() => _selectedLevel = newValue!),
+              dropdownColor: widget.themeMode == 0 ? const Color(0xFF1E1E1E) : (widget.themeMode == 1 ? const Color(0xFF616161) : Colors.white),
+            ),
+            const SizedBox(height: 40),
+            SizedBox(width: double.infinity, child: ElevatedButton(onPressed: _saveAndContinue, child: const Text("متابعة", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w400)))),
+          ],
+        ),
+      ),
+    );
+  }
+}
