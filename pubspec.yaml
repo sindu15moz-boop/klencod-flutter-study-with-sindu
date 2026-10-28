@@ -29,3 +29,8 @@ flutter:
     - ocean.mp3
     - rain1.mp3
     - rain2.mp3
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "app_icon.png"
+  min_sdk_android: 21
