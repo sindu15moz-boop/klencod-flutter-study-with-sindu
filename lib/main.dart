@@ -305,3 +305,246 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
+class MainAppScreen extends StatefulWidget {
+  final int themeMode;
+  final Function(int) onThemeChange;
+  const MainAppScreen({super.key, required this.themeMode, required this.onThemeChange});
+  @override
+  State<MainAppScreen> createState() => _MainAppScreenState();
+}
+
+class _MainAppScreenState extends State<MainAppScreen> {
+  int _currentIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    Color textColor = widget.themeMode >= 2 ? Colors.black : Colors.white;
+    Color navBg = widget.themeMode == 0 ? const Color(0xFF121212) : (widget.themeMode == 1 ? const Color(0xFF424242) : (widget.themeMode == 2 ? const Color(0xFFE0F7FA) : (widget.themeMode == 3 ? const Color(0xFFE8F5E9) : Colors.white)));
+
+    final screens = [
+      RoomScreen(themeMode: widget.themeMode, onThemeChange: widget.onThemeChange),
+      SoundScreen(themeMode: widget.themeMode),
+      SettingsScreen(themeMode: widget.themeMode, onThemeChange: widget.onThemeChange),
+    ];
+
+    return Scaffold(
+      body: screens[_currentIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: navBg,
+        currentIndex: _currentIndex,
+        onTap: (index) => setState(() => _currentIndex = index),
+        selectedItemColor: textColor,
+        unselectedItemColor: textColor.withOpacity(0.4),
+        selectedFontSize: 12,
+        unselectedFontSize: 12,
+        type: BottomNavigationBarType.fixed,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.timer_outlined), activeIcon: Icon(Icons.timer), label: "الرئيسية"),
+          BottomNavigationBarItem(icon: Icon(Icons.music_note_outlined), activeIcon: Icon(Icons.music_note), label: "الأصوات"),
+          BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), activeIcon: Icon(Icons.settings), label: "الإعدادات"),
+        ],
+      ),
+    );
+  }
+}
+
+class RoomScreen extends StatefulWidget {
+  final int themeMode;
+  final Function(int) onThemeChange;
+  const RoomScreen({super.key, required this.themeMode, required this.onThemeChange});
+  @override
+  State<RoomScreen> createState() => _RoomScreenState();
+}
+
+class _RoomScreenState extends State<RoomScreen> with SingleTickerProviderStateMixin {
+  int seconds = 1500;
+  bool isRunning = false;
+  bool isBreak = false;
+  bool isFocusMode = false;
+  Timer? _timer;
+  late AnimationController _controller;
+  late Animation<double> _animation;
+  String _studentName = "";
+  int streak = 0;
+
+  final List<String> _motivations = [
+    "أحسنت! لقد قطعت شوطاً كبيراً اليوم.",
+    "استمر، فكل دقيقة تقربك من هدفك.",
+    "أنت تبني مستقبلك الآن، لا تتوقف!",
+    "رائع! لقد أثبتت أنك قادر على التركيز.",
+    "العلم نور، وأنت اليوم تزداد نوراً.",
+    "تعب اليوم هو راحة الغد، واصل التقدم.",
+    "أنت أقوى من التحديات، استمر في القراءة.",
+    "خطوة بخطوة، تصل إلى القمة.",
+    "اجعل من دراستك عادة، ومن النجاح نتيجة.",
+    "لا شيء مستحيل أمام الإصرار والعزيمة."
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 3))..repeat(reverse: true);
+    _animation = Tween<double>(begin: -5, end: 5).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+  }
+
+  void _loadUserData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _studentName = prefs.getString('student_name') ?? "طالب";
+      streak = prefs.getInt('streak') ?? 0;
+    });
+  }
+
+  String get timerText {
+    int m = seconds ~/ 60;
+    int s = seconds % 60;
+    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+  }
+
+  void _setTime(int minutes) {
+    if (!isRunning) {
+      setState(() {
+        seconds = minutes * 60;
+        isBreak = false;
+      });
+    }
+  }
+
+  void _startBreak(int minutes) {
+    setState(() {
+      seconds = minutes * 60;
+      isBreak = true;
+      isRunning = false;
+    });
+  }
+
+  void _toggleTimer() {
+    if (isRunning) {
+      _timer?.cancel();
+      setState(() => isRunning = false);
+    } else {
+      if (seconds == 0) return;
+      setState(() => isRunning = true);
+      _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (seconds > 0) { setState(() => seconds--); } 
+        else {
+          _timer?.cancel();
+          setState(() => isRunning = false);
+          if (isBreak) {
+            _showBreakEndDialog();
+          } else {
+            _saveStudyTime();
+            _showRelaxationDialog();
+          }
+        }
+      });
+    }
+  }
+
+  void _saveStudyTime() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int current = prefs.getInt('total_study_minutes') ?? 0;
+    int studied = (1500 - seconds) ~/ 60;
+    await prefs.setInt('total_study_minutes', current + studied);
+    
+    int newStreak = streak + 1;
+    await prefs.setInt('streak', newStreak);
+    setState(() => streak = newStreak);
+  }
+
+  void _showRelaxationDialog() {
+    Color textColor = widget.themeMode >= 2 ? Colors.black : Colors.white;
+    String randomMotivation = _motivations[Random().nextInt(_motivations.length)];
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: widget.themeMode == 0 ? const Color(0xFF1E1E1E) : (widget.themeMode == 1 ? const Color(0xFF616161) : Colors.white),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+        title: Text('أحسنت!', textAlign: TextAlign.center, style: TextStyle(color: textColor, fontSize: 24, fontWeight: FontWeight.w300)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(randomMotivation, textAlign: TextAlign.center, style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 20),
+            Text('اختر مدة الراحة التي تناسبك:', textAlign: TextAlign.center, style: TextStyle(color: textColor.withOpacity(0.7), fontSize: 16)),
+          ],
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          Wrap(
+            spacing: 10,
+            children: [
+              _buildBreakButton(5, textColor),
+              _buildBreakButton(10, textColor),
+              _buildBreakButton(15, textColor),
+              _buildBreakButton(20, textColor),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 15.0),
+            child: OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: textColor.withOpacity(0.3), width: 1),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              ),
+              onPressed: () => Navigator.pop(context),
+              child: Text('تخطي الراحة', style: TextStyle(color: textColor.withOpacity(0.6), fontSize: 14, fontWeight: FontWeight.w300)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBreakButton(int minutes, Color textColor) {
+    return OutlinedButton(
+      style: OutlinedButton.styleFrom(
+        side: BorderSide(color: textColor.withOpacity(0.3), width: 1),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+      ),
+      onPressed: () {
+        Navigator.pop(context);
+        _startBreak(minutes);
+      },
+      child: Text("$minutes د", style: TextStyle(fontSize: 14, color: textColor.withOpacity(0.8), fontWeight: FontWeight.w300)),
+    );
+  }
+
+  void _showBreakEndDialog() {
+    Color textColor = widget.themeMode >= 2 ? Colors.black : Colors.white;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: widget.themeMode == 0 ? const Color(0xFF1E1E1E) : (widget.themeMode == 1 ? const Color(0xFF616161) : Colors.white),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+        title: Text('خلصت الراحة!', textAlign: TextAlign.center, style: TextStyle(color: textColor, fontSize: 24, fontWeight: FontWeight.w300)),
+        content: Text('أتمنى أنك ارتحت. يالاه نعاودو نقراو ونركزو!', textAlign: TextAlign.center, style: TextStyle(color: textColor.withOpacity(0.7), fontSize: 16)),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: textColor,
+              foregroundColor: widget.themeMode >= 2 ? Colors.white : Colors.black,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
+              elevation: 0,
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() {
+                seconds = 1500;
+                isBreak = false;
+              });
+            },
+            child: const Text('العودة للدراسة', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400)),
+          ),
+        ],
+      ),
+    );
+  }
