@@ -23,7 +23,7 @@ if (flutterVersionName == null) {
 }
 
 android {
-    namespace = "com.study.with.sindu"
+    namespace = "com.study.room"
     compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
