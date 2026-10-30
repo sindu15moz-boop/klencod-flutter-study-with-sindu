@@ -38,3 +38,7 @@ flutter_launcher_icons:
   ios: true
   image_path: "app_icon.png"
   min_sdk_android: 21
+fonts:
+  - family: Sanchez
+    fonts:
+      - asset: Sanchez-Regular.ttf
