@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "103318032630",
+    "project_id": "study-room-39316",
+    "storage_bucket": "study-room-39316.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:103318032630:android:e6a771dec8d37c61719cd7",
+        "android_client_info": {
+          "package_name": "com.study.room"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDqM9tu0mS7C0QKQ2gbzGAu1ohln8jrsSM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
