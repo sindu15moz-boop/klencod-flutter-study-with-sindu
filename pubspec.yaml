@@ -25,20 +25,24 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  
+  # هنا ركزنا على المسار الصحيح
   assets:
-    - ghost.png
-    - noise1.mp3
-    - noise2.mp3
-    - ocean.mp3
-    - rain1.mp3
-    - rain2.mp3
+    - assets/ghost.png
+    - assets/noise1.mp3
+    - assets/noise2.mp3
+    - assets/ocean.mp3
+    - assets/rain1.mp3
+    - assets/rain2.mp3
+    - assets/app_icon.png
+    
   fonts:
     - family: Sanchez
       fonts:
-        - asset: Sanchez-Regular.ttf
+        - asset: assets/Sanchez-Regular.ttf
 
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "app_icon.png"
+  image_path: "assets/app_icon.png"
   min_sdk_android: 21
