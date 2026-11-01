@@ -1,4 +1,4 @@
-name: Build Flutter APK
+name: Build Study with Sindu APK
 
 on:
   workflow_dispatch:
@@ -24,6 +24,10 @@ jobs:
 
       - name: Get dependencies
         run: flutter pub get
+
+      - name: Print SHA-1 Fingerprint
+        run: |
+          keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android | grep SHA1
 
       - name: Build APK
         run: flutter build apk --release
