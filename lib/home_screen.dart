@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_picker/image_picker.dart';
 import 'posts_screen.dart';
 import 'friends_screen.dart';
 
@@ -63,9 +64,51 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         else {
           _timer?.cancel();
           setState(() => isRunning = false);
-          _saveStudyTime();
+          _showProofDialog();
         }
       });
+    }
+  }
+
+  void _showProofDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E1E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+        title: const Text('خلص الوقت!', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontFamily: 'Sanchez')),
+        content: const Text('لازم تصور درسك باش تثبت بلي كنت تقرا.', textAlign: TextAlign.center, style: TextStyle(color: Colors.white70, fontFamily: 'Sanchez')),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.black,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+              _takePicture();
+            },
+            child: const Text('تصوير الدرس', style: TextStyle(fontFamily: 'Sanchez')),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _takePicture() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.camera);
+    
+    if (image != null) {
+      _saveStudyTime();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("تم تصوير الدرس بنجاح!", style: TextStyle(fontFamily: 'Sanchez'))));
+      }
+    } else {
+      _showProofDialog();
     }
   }
 
