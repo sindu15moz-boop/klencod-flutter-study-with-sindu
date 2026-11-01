@@ -1,8 +1,11 @@
-import 'package:flutter/material.dart';
 import 'dart:async';
+import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'posts_screen.dart';
 import 'friends_screen.dart';
 
@@ -60,8 +63,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       if (seconds == 0) return;
       setState(() => isRunning = true);
       _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-        if (seconds > 0) { setState(() => seconds--); } 
-        else {
+        if (seconds > 0) { 
+          setState(() => seconds--); 
+        } else {
           _timer?.cancel();
           setState(() => isRunning = false);
           _showProofDialog();
@@ -100,14 +104,52 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   Future<void> _takePicture() async {
     final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.camera);
-    
+    final XFile? image = await picker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 60,
+    );
+
     if (image != null) {
-      _saveStudyTime();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("تم تصوير الدرس بنجاح!", style: TextStyle(fontFamily: 'Sanchez'))));
+      // نطلعو لودينغ باش المستخدم يعرف بلي راهو يرفع
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
+      );
+
+      try {
+        // 1. نرفعو الصورة لـ Firebase Storage
+        String fileName = DateTime.now().millisecondsSinceEpoch.toString();
+        Reference ref = FirebaseStorage.instance.ref().child('study_proofs/$fileName.jpg');
+        await ref.putFile(File(image.path));
+        String downloadUrl = await ref.getDownloadURL();
+
+        // 2. نسجلو الجلسة في Firestore
+        await FirebaseFirestore.instance.collection('sessions').add({
+          'userId': FirebaseAuth.instance.currentUser!.uid,
+          'proofImage': downloadUrl,
+          'date': FieldValue.serverTimestamp(),
+          'duration': (1500 - seconds) ~/ 60, // المدة اللي قراتها بالدقايق
+        });
+
+        // 3. نسجلو الوقت في SharedPreferences (تاع التيليفون)
+        _saveStudyTime();
+
+        if (!mounted) return;
+        Navigator.pop(context); // نسكرو اللودينغ
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("تم تسجيل جلستك بنجاح! 🎉", style: TextStyle(fontFamily: 'Sanchez'))),
+        );
+      } catch (e) {
+        if (!mounted) return;
+        Navigator.pop(context); // نسكرو اللودينغ
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("خطأ: $e", style: TextStyle(fontFamily: 'Sanchez'))),
+        );
       }
     } else {
+      // إذا سكر الكاميرا بلا ما يصور
       _showProofDialog();
     }
   }
@@ -117,14 +159,20 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     int current = prefs.getInt('total_study_minutes') ?? 0;
     int studied = (1500 - seconds) ~/ 60;
     await prefs.setInt('total_study_minutes', current + studied);
-    
+
     int newStreak = streak + 1;
     await prefs.setInt('streak', newStreak);
-    setState(() => streak = newStreak);
+    if (mounted) {
+      setState(() => streak = newStreak);
+    }
   }
 
   @override
-  void dispose() { _timer?.cancel(); _controller.dispose(); super.dispose(); }
+  void dispose() { 
+    _timer?.cancel(); 
+    _controller.dispose(); 
+    super.dispose(); 
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -177,7 +225,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               children: [
                 Positioned.fill(
                   child: Image.asset(
-                    'ghost.png',
+                    'assets/ghost.png', // هنا درنا المسار الصحيح
                     fit: BoxFit.cover,
                     errorBuilder: (c, e, s) => Container(color: Colors.black12),
                   ),
