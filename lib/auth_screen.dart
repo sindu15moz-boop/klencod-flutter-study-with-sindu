@@ -1,107 +1,136 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'auth_service.dart';
-import 'home_screen.dart';
+import 'app_language.dart';
+import 'auth_screen.dart'; // الملف الصحيح تاع صفحة الدخول
 
-class AuthScreen extends StatefulWidget {
-  const AuthScreen({super.key});
+class SettingsScreen extends StatefulWidget {
+  const SettingsScreen({super.key});
+
   @override
-  State<AuthScreen> createState() => _AuthScreenState();
+  State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _AuthScreenState extends State<AuthScreen> {
-  final AuthService _authService = AuthService();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _isLogin = true;
-  bool _isLoading = false;
-
-  void _submit() async {
-    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) return;
-    setState(() => _isLoading = true);
-    User? user;
-    if (_isLogin) {
-      user = await _authService.signIn(_emailController.text.trim(), _passwordController.text.trim());
-    } else {
-      user = await _authService.signUp(_emailController.text.trim(), _passwordController.text.trim());
-    }
+class _SettingsScreenState extends State<SettingsScreen> {
+  // دالة تسجيل الخروج
+  Future<void> _logout() async {
+    await FirebaseAuth.instance.signOut();
     if (mounted) {
-      setState(() => _isLoading = false);
-      if (user != null) {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomeScreen()));
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('حدث خطأ، تحقق من البيانات')));
-      }
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const AuthScreen()), // <--- هنا بدلناها
+        (route) => false,
+      );
     }
+  }
+
+  // نافذة اختيار اللغة
+  void _showLanguageDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(AppLanguage.get('language')),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: const Text('العربية'),
+                onTap: () async {
+                  await AppLanguage.changeLanguage('ar');
+                  Navigator.pop(context);
+                  setState(() {});
+                },
+              ),
+              ListTile(
+                title: const Text('Français'),
+                onTap: () async {
+                  await AppLanguage.changeLanguage('fr');
+                  Navigator.pop(context);
+                  setState(() {});
+                },
+              ),
+              ListTile(
+                title: const Text('English'),
+                onTap: () async {
+                  await AppLanguage.changeLanguage('en');
+                  Navigator.pop(context);
+                  setState(() {});
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(25.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.person_outline, size: 80, color: Colors.white),
-              const SizedBox(height: 30),
-              Text(
-                _isLogin ? "تسجيل الدخول" : "إنشاء حساب",
-                style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w300, color: Colors.white, fontFamily: 'Sanchez'),
-              ),
-              const SizedBox(height: 30),
-              TextField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: "البريد الإلكتروني",
-                  prefixIcon: Icon(Icons.email_outlined),
-                  filled: true,
-                  fillColor: Color(0xFF1E1E1E),
-                  labelStyle: TextStyle(color: Colors.white70),
-                ),
-                style: const TextStyle(color: Colors.white),
-              ),
-              const SizedBox(height: 15),
-              TextField(
-                controller: _passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: "كلمة المرور",
-                  prefixIcon: Icon(Icons.lock_outline),
-                  filled: true,
-                  fillColor: Color(0xFF1E1E1E),
-                  labelStyle: TextStyle(color: Colors.white70),
-                ),
-                style: const TextStyle(color: Colors.white),
-              ),
-              const SizedBox(height: 30),
-              _isLoading
-                  ? const CircularProgressIndicator()
-                  : SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: Colors.black,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                          padding: const EdgeInsets.symmetric(vertical: 15),
-                        ),
-                        onPressed: _submit,
-                        child: Text(_isLogin ? "دخول" : "إنشاء حساب", style: const TextStyle(fontSize: 18, fontFamily: 'Sanchez')),
-                      ),
-                    ),
-              TextButton(
-                onPressed: () => setState(() => _isLogin = !_isLogin),
-                child: Text(
-                  _isLogin ? "ليس لديك حساب؟ سجل هنا" : "لديك حساب؟ دخل من هنا",
-                  style: const TextStyle(color: Colors.white70, fontFamily: 'Sanchez'),
-                ),
-              ),
-            ],
-          ),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF1E1E1E),
+        title: Text(
+          AppLanguage.get('settings'),
+          style: const TextStyle(fontFamily: 'Sanchez'),
         ),
+        centerTitle: true,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          // 1. معلومات الحساب
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1E1E1E),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              children: [
+                const CircleAvatar(
+                  radius: 40,
+                  backgroundColor: Colors.white24,
+                  child: Icon(Icons.person, size: 50, color: Colors.white),
+                ),
+                const SizedBox(height: 15),
+                Text(
+                  user?.email ?? 'لا يوجد إيميل',
+                  style: const TextStyle(color: Colors.white, fontSize: 18, fontFamily: 'Sanchez'),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 30),
+
+          // 2. زر تغيير اللغة
+          ListTile(
+            tileColor: const Color(0xFF1E1E1E),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+            leading: const Icon(Icons.language, color: Colors.white),
+            title: Text(
+              AppLanguage.get('language'),
+              style: const TextStyle(color: Colors.white, fontFamily: 'Sanchez'),
+            ),
+            trailing: const Icon(Icons.arrow_forward_ios, color: Colors.white54, size: 16),
+            onTap: _showLanguageDialog,
+          ),
+          const SizedBox(height: 15),
+
+          // 3. زر تسجيل الخروج
+          ListTile(
+            tileColor: const Color(0xFF1E1E1E),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+            leading: const Icon(Icons.logout, color: Colors.red),
+            title: Text(
+              AppLanguage.get('logout'),
+              style: const TextStyle(color: Colors.red, fontFamily: 'Sanchez'),
+            ),
+            onTap: _logout,
+          ),
+        ],
       ),
     );
   }
