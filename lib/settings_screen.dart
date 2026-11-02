@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'app_language.dart';
-import 'auth_screen.dart'; // تأكدي بلي هاد الملف موجود عندك
+import 'auth_screen.dart'; // الملف الصحيح تاع صفحة الدخول
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -17,7 +17,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (mounted) {
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        MaterialPageRoute(builder: (context) => const AuthScreen()), // هنا صلحناها
         (route) => false,
       );
     }
