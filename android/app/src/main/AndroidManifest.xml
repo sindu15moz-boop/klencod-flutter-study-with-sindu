@@ -3,12 +3,11 @@
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <!-- هذا هو السطر اللي كان ناقص وراهو هنا -->
-    <uses-permission android:name="android.permission.CAMERA"/> 
+    <uses-permission android:name="android.permission.CAMERA"/>
 
     <application
         android:requestLegacyExternalStorage="true"
-        android:label="Study with sindu"
+        android:label="Ben Mouzouz Rahab"
         android:icon="@drawable/ic_launcher"
         android:theme="@style/NormalTheme">
         <activity
