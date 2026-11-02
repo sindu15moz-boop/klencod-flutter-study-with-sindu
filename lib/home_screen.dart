@@ -1,3 +1,4 @@
+
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -6,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'app_language.dart'; // <--- زدنا هادي باش نربطو اللغة
 import 'posts_screen.dart';
 import 'friends_screen.dart';
 
@@ -74,6 +76,47 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     }
   }
 
+  // نافذة اختيار اللغة
+  void _showLanguageDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(AppLanguage.get('language')),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: const Text('العربية'),
+                onTap: () async {
+                  await AppLanguage.changeLanguage('ar');
+                  Navigator.pop(context);
+                  setState(() {});
+                },
+              ),
+              ListTile(
+                title: const Text('Français'),
+                onTap: () async {
+                  await AppLanguage.changeLanguage('fr');
+                  Navigator.pop(context);
+                  setState(() {});
+                },
+              ),
+              ListTile(
+                title: const Text('English'),
+                onTap: () async {
+                  await AppLanguage.changeLanguage('en');
+                  Navigator.pop(context);
+                  setState(() {});
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   void _showProofDialog() {
     showDialog(
       context: context,
@@ -110,7 +153,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
 
     if (image != null) {
-      // نطلعو لودينغ باش المستخدم يعرف بلي راهو يرفع
       if (!mounted) return;
       showDialog(
         context: context,
@@ -119,37 +161,33 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       );
 
       try {
-        // 1. نرفعو الصورة لـ Firebase Storage
         String fileName = DateTime.now().millisecondsSinceEpoch.toString();
         Reference ref = FirebaseStorage.instance.ref().child('study_proofs/$fileName.jpg');
         await ref.putFile(File(image.path));
         String downloadUrl = await ref.getDownloadURL();
 
-        // 2. نسجلو الجلسة في Firestore
         await FirebaseFirestore.instance.collection('sessions').add({
           'userId': FirebaseAuth.instance.currentUser!.uid,
           'proofImage': downloadUrl,
           'date': FieldValue.serverTimestamp(),
-          'duration': (1500 - seconds) ~/ 60, // المدة اللي قراتها بالدقايق
+          'duration': (1500 - seconds) ~/ 60, 
         });
 
-        // 3. نسجلو الوقت في SharedPreferences (تاع التيليفون)
         _saveStudyTime();
 
         if (!mounted) return;
-        Navigator.pop(context); // نسكرو اللودينغ
+        Navigator.pop(context); 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("تم تسجيل جلستك بنجاح! 🎉", style: TextStyle(fontFamily: 'Sanchez'))),
         );
       } catch (e) {
         if (!mounted) return;
-        Navigator.pop(context); // نسكرو اللودينغ
+        Navigator.pop(context); 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("خطأ: $e", style: TextStyle(fontFamily: 'Sanchez'))),
         );
       }
     } else {
-      // إذا سكر الكاميرا بلا ما يصور
       _showProofDialog();
     }
   }
@@ -210,12 +248,22 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  "مرحباً $_studentName",
+                  "${AppLanguage.get('welcome')} $_studentName", // <--- هنا ربطنا الترجمة
                   style: const TextStyle(color: Colors.white, fontSize: 20, fontFamily: 'Sanchez'),
                 ),
-                Text(
-                  "🔥 $streak",
-                  style: const TextStyle(color: Colors.orange, fontSize: 20, fontWeight: FontWeight.bold),
+                Row(
+                  children: [
+                    Text(
+                      "🔥 $streak",
+                      style: const TextStyle(color: Colors.orange, fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(width: 10),
+                    // زر اللغة (كرة الأرضية)
+                    IconButton(
+                      icon: const Icon(Icons.language, color: Colors.white),
+                      onPressed: _showLanguageDialog,
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -225,7 +273,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               children: [
                 Positioned.fill(
                   child: Image.asset(
-                    'assets/ghost.png', // هنا درنا المسار الصحيح
+                    'assets/ghost.png',
                     fit: BoxFit.cover,
                     errorBuilder: (c, e, s) => Container(color: Colors.black12),
                   ),
