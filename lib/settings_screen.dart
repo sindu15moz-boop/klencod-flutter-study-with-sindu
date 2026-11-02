@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'app_language.dart';
-import 'auth_screen.dart'; // الملف الصحيح تاع صفحة الدخول
+import 'auth_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -11,19 +11,17 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  // دالة تسجيل الخروج
   Future<void> _logout() async {
     await FirebaseAuth.instance.signOut();
     if (mounted) {
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => const AuthScreen()), // هنا صلحناها
+        MaterialPageRoute(builder: (context) => const AuthScreen()), // هادي هي الصحيحة
         (route) => false,
       );
     }
   }
 
-  // نافذة اختيار اللغة
   void _showLanguageDialog() {
     showDialog(
       context: context,
@@ -81,7 +79,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          // 1. معلومات الحساب
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -104,8 +101,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 30),
-
-          // 2. زر تغيير اللغة
           ListTile(
             tileColor: const Color(0xFF1E1E1E),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -118,8 +113,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: _showLanguageDialog,
           ),
           const SizedBox(height: 15),
-
-          // 3. زر تسجيل الخروج
           ListTile(
             tileColor: const Color(0xFF1E1E1E),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
