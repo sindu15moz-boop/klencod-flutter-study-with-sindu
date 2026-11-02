@@ -1,6 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
 import 'firestore_service.dart';
 
 class PostsScreen extends StatefulWidget {
@@ -13,11 +16,120 @@ class _PostsScreenState extends State<PostsScreen> {
   final FirestoreService _firestoreService = FirestoreService();
   final TextEditingController _postController = TextEditingController();
   final User? _user = FirebaseAuth.instance.currentUser;
+  File? _selectedImage; // باش نحفظو الصورة المختارة
 
+  // دالة تختار صورة من الغاليري ولا الكاميرا
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 60); // تقدري تبدلي لـ camera
+    if (image != null) {
+      setState(() {
+        _selectedImage = File(image.path);
+      });
+    }
+  }
+
+  // دالة تنشر البوست (مع صورة ولا بلا صورة)
   void _addPost() async {
     if (_postController.text.trim().isEmpty || _user == null) return;
-    await _firestoreService.addPost(_user!.uid, _user!.email ?? 'طالب', _postController.text.trim());
+
+    String? imageUrl;
+    if (_selectedImage != null) {
+      // نرفعو الصورة لـ Firebase Storage
+      String fileName = DateTime.now().millisecondsSinceEpoch.toString();
+      Reference ref = FirebaseStorage.instance.ref().child('post_images/$fileName.jpg');
+      await ref.putFile(_selectedImage!);
+      imageUrl = await ref.getDownloadURL();
+    }
+
+    // نضيفو البوست في Firestore
+    await _firestoreService.addPost(
+      _user!.uid,
+      _user!.email ?? 'طالب',
+      _postController.text.trim(),
+      imageUrl, // نقدرو نزيدوها في Firestore Service
+    );
+
     _postController.clear();
+    setState(() {
+      _selectedImage = null; // نمسحو الصورة بعد النشر
+    });
+  }
+
+  // نافذة التعليقات
+  void _showCommentsDialog(String postId) {
+    final TextEditingController commentController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1E1E1E),
+          title: const Text('التعليقات', style: TextStyle(color: Colors.white, fontFamily: 'Sanchez')),
+          content: SizedBox(
+            width: double.maxFinite,
+            height: 300,
+            child: Column(
+              children: [
+                Expanded(
+                  child: StreamBuilder<QuerySnapshot>(
+                    stream: FirebaseFirestore.instance
+                        .collection('posts')
+                        .doc(postId)
+                        .collection('comments')
+                        .orderBy('timestamp', descending: true)
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                      final comments = snapshot.data!.docs;
+                      if (comments.isEmpty) return const Center(child: Text('لا توجد تعليقات', style: TextStyle(color: Colors.white54)));
+                      return ListView.builder(
+                        itemCount: comments.length,
+                        itemBuilder: (context, index) {
+                          final comment = comments[index];
+                          return ListTile(
+                            title: Text(comment['userEmail'], style: const TextStyle(color: Colors.orange, fontSize: 12)),
+                            subtitle: Text(comment['text'], style: const TextStyle(color: Colors.white)),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: commentController,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: const InputDecoration(hintText: 'أضف تعليقاً...', hintStyle: TextStyle(color: Colors.white54)),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.send, color: Colors.white),
+                      onPressed: () async {
+                        if (commentController.text.isNotEmpty) {
+                          await FirebaseFirestore.instance
+                              .collection('posts')
+                              .doc(postId)
+                              .collection('comments')
+                              .add({
+                            'userId': _user!.uid,
+                            'userEmail': _user!.email,
+                            'text': commentController.text,
+                            'timestamp': FieldValue.serverTimestamp(),
+                          });
+                          commentController.clear();
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -31,31 +143,54 @@ class _PostsScreenState extends State<PostsScreen> {
       ),
       body: Column(
         children: [
+          // خانة كتابة البوست + زر الصورة + زر الإرسال
           Padding(
             padding: const EdgeInsets.all(15.0),
-            child: Row(
+            child: Column(
               children: [
-                Expanded(
-                  child: TextField(
-                    controller: _postController,
-                    decoration: InputDecoration(
-                      hintText: "شاركنا تقدمك...",
-                      hintStyle: const TextStyle(color: Colors.white54, fontFamily: 'Sanchez'),
-                      filled: true,
-                      fillColor: const Color(0xFF1E1E1E),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(30), borderSide: BorderSide.none),
-                    ),
-                    style: const TextStyle(color: Colors.white),
+                if (_selectedImage != null)
+                  Stack(
+                    children: [
+                      Image.file(_selectedImage!, height: 100),
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: IconButton(
+                          icon: const Icon(Icons.close, color: Colors.red),
+                          onPressed: () => setState(() => _selectedImage = null),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(width: 10),
-                IconButton(
-                  icon: const Icon(Icons.send, color: Colors.white),
-                  onPressed: _addPost,
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _postController,
+                        decoration: InputDecoration(
+                          hintText: "شاركنا تقدمك...",
+                          hintStyle: const TextStyle(color: Colors.white54, fontFamily: 'Sanchez'),
+                          filled: true,
+                          fillColor: const Color(0xFF1E1E1E),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(30), borderSide: BorderSide.none),
+                        ),
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.image, color: Colors.white54),
+                      onPressed: _pickImage,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.send, color: Colors.white),
+                      onPressed: _addPost,
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
+          // قائمة البوستات
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: _firestoreService.getPosts(),
@@ -67,18 +202,59 @@ class _PostsScreenState extends State<PostsScreen> {
                   itemCount: posts.length,
                   itemBuilder: (context, index) {
                     final post = posts[index];
+                    int likes = post['likes'] ?? 0;
+
                     return Card(
                       color: const Color(0xFF1E1E1E),
                       margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                      child: ListTile(
-                        title: Text(post['userName'], style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold)),
-                        subtitle: Text(post['content'], style: const TextStyle(color: Colors.white)),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
+                      child: Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(Icons.favorite, color: Colors.red, size: 16),
-                            const SizedBox(width: 5),
-                            Text('${post['likes']}', style: const TextStyle(color: Colors.white)),
+                            ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              title: Text(post['userName'] ?? 'مستخدم', style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold)),
+                              subtitle: Text(post['content'] ?? '', style: const TextStyle(color: Colors.white)),
+                            ),
+                            // إذا كان في صورة، نعرضوها
+                            if (post['imageUrl'] != null)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                child: Image.network(post['imageUrl'], fit: BoxFit.cover),
+                              ),
+                            const Divider(color: Colors.white24),
+                            Row(
+                              children: [
+                                // زر اللايك
+                                GestureDetector(
+                                  onTap: () async {
+                                    await FirebaseFirestore.instance.collection('posts').doc(post.id).update({
+                                      'likes': likes + 1,
+                                    });
+                                  },
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.favorite, color: Colors.red, size: 20),
+                                      const SizedBox(width: 5),
+                                      Text('$likes', style: const TextStyle(color: Colors.white)),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 20),
+                                // زر التعليق
+                                GestureDetector(
+                                  onTap: () => _showCommentsDialog(post.id),
+                                  child: const Row(
+                                    children: [
+                                      Icon(Icons.comment, color: Colors.white54, size: 20),
+                                      SizedBox(width: 5),
+                                      Text('تعليق', style: TextStyle(color: Colors.white54)),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ],
                         ),
                       ),
