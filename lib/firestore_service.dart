@@ -3,11 +3,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  Future<void> addPost(String userId, String userName, String content) async {
+  // دالة إضافة بوست (مع صورة أو بلا صورة)
+  Future<void> addPost(String userId, String userName, String content, String? imageUrl) async {
     await _db.collection('posts').add({
       'userId': userId,
       'userName': userName,
       'content': content,
+      'imageUrl': imageUrl, // <--- زدنا هادي (كتقبل null إذا ماكانش صورة)
       'likes': 0,
       'timestamp': FieldValue.serverTimestamp(),
     });
