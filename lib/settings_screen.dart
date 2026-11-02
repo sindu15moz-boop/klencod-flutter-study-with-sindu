@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'app_language.dart';
-import 'login_screen.dart'; // تأكدي بلي هاد الملف موجود عندك
+import 'auth_screen.dart'; // تأكدي بلي هاد الملف موجود عندك
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
