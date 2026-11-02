@@ -1,4 +1,3 @@
-import 'settings_screen.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -7,7 +6,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'app_language.dart'; // <--- زدنا هادي باش نربطو اللغة
+import 'app_language.dart';
+import 'settings_screen.dart'; // <--- زدنا هادي باش يخدم زر الإعدادات
 import 'posts_screen.dart';
 import 'friends_screen.dart';
 
@@ -248,7 +248,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  "${AppLanguage.get('welcome')} $_studentName", // <--- هنا ربطنا الترجمة
+                  "${AppLanguage.get('welcome')} $_studentName",
                   style: const TextStyle(color: Colors.white, fontSize: 20, fontFamily: 'Sanchez'),
                 ),
                 Row(
@@ -258,10 +258,20 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       style: const TextStyle(color: Colors.orange, fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(width: 10),
-                    // زر اللغة (كرة الأرضية)
+                    // زر اللغة
                     IconButton(
                       icon: const Icon(Icons.language, color: Colors.white),
                       onPressed: _showLanguageDialog,
+                    ),
+                    // زر الإعدادات
+                    IconButton(
+                      icon: const Icon(Icons.settings, color: Colors.white),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                        ).then((_) => setState(() {}));
+                      },
                     ),
                   ],
                 ),
