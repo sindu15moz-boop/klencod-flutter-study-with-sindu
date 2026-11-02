@@ -7,7 +7,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'app_language.dart';
-import 'settings_screen.dart'; // <--- زدنا هادي باش يخدم زر الإعدادات
+import 'settings_screen.dart';
+import 'breathing_screen.dart'; // <--- زدنا هادي فقط
 import 'posts_screen.dart';
 import 'friends_screen.dart';
 
@@ -258,6 +259,16 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       style: const TextStyle(color: Colors.orange, fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(width: 10),
+                    // زر التنفس (جديد)
+                    IconButton(
+                      icon: const Icon(Icons.self_improvement, color: Colors.cyanAccent),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const BreathingScreen()),
+                        );
+                      },
+                    ),
                     // زر اللغة
                     IconButton(
                       icon: const Icon(Icons.language, color: Colors.white),
