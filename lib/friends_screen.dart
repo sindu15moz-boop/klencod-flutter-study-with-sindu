@@ -14,7 +14,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
   List<Map<String, dynamic>> _searchResults = [];
   bool _hasSearched = false;
 
-  // دالة البحث عن صديق بالإيميل
+  // دالة البحث عن صديق بالاسم أو الإيميل
   Future<void> _searchFriend() async {
     final query = _searchController.text.trim();
     if (query.isEmpty) return;
@@ -26,23 +26,31 @@ class _FriendsScreenState extends State<FriendsScreen> {
     });
 
     try {
-      // نبحثو في مجموعة users على الإيميل
-      final snapshot = await FirebaseFirestore.instance
+      // نبحثو بالإيميل
+      final emailSnapshot = await FirebaseFirestore.instance
           .collection('users')
           .where('email', isEqualTo: query)
           .get();
 
-      if (snapshot.docs.isNotEmpty) {
-        // لقيناه
-        setState(() {
-          _searchResults = snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
-        });
-      } else {
-        // ما لقيناهش
-        setState(() {
-          _searchResults = [];
-        });
+      // نبحثو بالاسم
+      final nameSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .where('name', isGreaterThanOrEqualTo: query)
+          .where('name', isLessThanOrEqualTo: query + '\uf8ff')
+          .get();
+
+      // نجمعو النتائج
+      Set<Map<String, dynamic>> results = {};
+      for (var doc in emailSnapshot.docs) {
+        results.add(doc.data());
       }
+      for (var doc in nameSnapshot.docs) {
+        results.add(doc.data());
+      }
+
+      setState(() {
+        _searchResults = results.toList();
+      });
     } catch (e) {
       print("Error: $e");
     } finally {
@@ -57,7 +65,6 @@ class _FriendsScreenState extends State<FriendsScreen> {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
 
-    // نسجلو الصديق في مجموعة المستخدم الحالي
     await FirebaseFirestore.instance
         .collection('users')
         .doc(currentUser.uid)
@@ -94,7 +101,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                   child: TextField(
                     controller: _searchController,
                     decoration: InputDecoration(
-                      hintText: 'أدخل إيميل صديقك...',
+                      hintText: 'أدخل اسم أو إيميل صديقك...',
                       hintStyle: const TextStyle(color: Colors.white54),
                       filled: true,
                       fillColor: const Color(0xFF1E1E1E),
@@ -137,8 +144,12 @@ class _FriendsScreenState extends State<FriendsScreen> {
                                   child: Icon(Icons.person, color: Colors.white),
                                 ),
                                 title: Text(
-                                  friend['email'] ?? 'مستخدم',
+                                  friend['name'] ?? 'مستخدم',
                                   style: const TextStyle(color: Colors.white),
+                                ),
+                                subtitle: Text(
+                                  friend['email'] ?? '',
+                                  style: const TextStyle(color: Colors.white54),
                                 ),
                                 trailing: IconButton(
                                   icon: const Icon(Icons.add, color: Colors.green),
