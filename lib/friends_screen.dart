@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'firestore_service.dart';
 
 class FriendsScreen extends StatefulWidget {
   const FriendsScreen({super.key});
@@ -10,15 +9,69 @@ class FriendsScreen extends StatefulWidget {
 }
 
 class _FriendsScreenState extends State<FriendsScreen> {
-  final FirestoreService _firestoreService = FirestoreService();
-  final TextEditingController _emailController = TextEditingController();
-  final User? _user = FirebaseAuth.instance.currentUser;
+  final TextEditingController _searchController = TextEditingController();
+  bool _isLoading = false;
+  List<Map<String, dynamic>> _searchResults = [];
+  bool _hasSearched = false;
 
-  void _addFriend() async {
-    if (_emailController.text.trim().isEmpty || _user == null) return;
-    await _firestoreService.addFriend(_user!.uid, _emailController.text.trim());
-    _emailController.clear();
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم إرسال طلب الصداقة!')));
+  // دالة البحث عن صديق بالإيميل
+  Future<void> _searchFriend() async {
+    final query = _searchController.text.trim();
+    if (query.isEmpty) return;
+
+    setState(() {
+      _isLoading = true;
+      _hasSearched = true;
+      _searchResults.clear();
+    });
+
+    try {
+      // نبحثو في مجموعة users على الإيميل
+      final snapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .where('email', isEqualTo: query)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        // لقيناه
+        setState(() {
+          _searchResults = snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
+        });
+      } else {
+        // ما لقيناهش
+        setState(() {
+          _searchResults = [];
+        });
+      }
+    } catch (e) {
+      print("Error: $e");
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  // دالة إضافة صديق
+  Future<void> _addFriend(String friendEmail) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+
+    // نسجلو الصديق في مجموعة المستخدم الحالي
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(currentUser.uid)
+        .collection('friends')
+        .add({
+      'email': friendEmail,
+      'addedAt': FieldValue.serverTimestamp(),
+    });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('تمت إضافة $friendEmail كصديق!')),
+      );
+    }
   }
 
   @override
@@ -26,22 +79,23 @@ class _FriendsScreenState extends State<FriendsScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
       appBar: AppBar(
-        title: const Text("الأصدقاء", style: TextStyle(fontFamily: 'Sanchez', color: Colors.white)),
+        title: const Text('الأصدقاء', style: TextStyle(fontFamily: 'Sanchez', color: Colors.white)),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(15.0),
-            child: Row(
+      body: Padding(
+        padding: const EdgeInsets.all(15.0),
+        child: Column(
+          children: [
+            // خانة البحث
+            Row(
               children: [
                 Expanded(
                   child: TextField(
-                    controller: _emailController,
+                    controller: _searchController,
                     decoration: InputDecoration(
-                      hintText: "أدخل إيميل صديقك...",
-                      hintStyle: const TextStyle(color: Colors.white54, fontFamily: 'Sanchez'),
+                      hintText: 'أدخل إيميل صديقك...',
+                      hintStyle: const TextStyle(color: Colors.white54),
                       filled: true,
                       fillColor: const Color(0xFF1E1E1E),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(30), borderSide: BorderSide.none),
@@ -52,38 +106,51 @@ class _FriendsScreenState extends State<FriendsScreen> {
                 const SizedBox(width: 10),
                 IconButton(
                   icon: const Icon(Icons.person_add, color: Colors.white),
-                  onPressed: _addFriend,
+                  onPressed: _searchFriend,
                 ),
               ],
             ),
-          ),
-          Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: _user != null
-                  ? FirebaseFirestore.instance.collection('users').doc(_user!.uid).collection('friends').snapshots()
-                  : const Stream.empty(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-                final friends = snapshot.data!.docs;
-                if (friends.isEmpty) return const Center(child: Text("لا يوجد أصدقاء بعد", style: TextStyle(color: Colors.white54)));
-                return ListView.builder(
-                  itemCount: friends.length,
-                  itemBuilder: (context, index) {
-                    final friend = friends[index];
-                    return Card(
-                      color: const Color(0xFF1E1E1E),
-                      margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                      child: ListTile(
-                        leading: const CircleAvatar(child: Icon(Icons.person)),
-                        title: Text(friend['email'], style: const TextStyle(color: Colors.white)),
-                      ),
-                    );
-                  },
-                );
-              },
+            const SizedBox(height: 20),
+
+            // النتائج
+            Expanded(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _hasSearched && _searchResults.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'نحن آسفون، لم نجد هذا المستخدم.',
+                            style: TextStyle(color: Colors.white54, fontFamily: 'Sanchez', fontSize: 18),
+                            textAlign: TextAlign.center,
+                          ),
+                        )
+                      : ListView.builder(
+                          itemCount: _searchResults.length,
+                          itemBuilder: (context, index) {
+                            final friend = _searchResults[index];
+                            return Card(
+                              color: const Color(0xFF1E1E1E),
+                              margin: const EdgeInsets.symmetric(vertical: 5),
+                              child: ListTile(
+                                leading: const CircleAvatar(
+                                  backgroundColor: Colors.white24,
+                                  child: Icon(Icons.person, color: Colors.white),
+                                ),
+                                title: Text(
+                                  friend['email'] ?? 'مستخدم',
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                                trailing: IconButton(
+                                  icon: const Icon(Icons.add, color: Colors.green),
+                                  onPressed: () => _addFriend(friend['email']),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
