@@ -25,12 +25,14 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
+      # 1. نبنيو الـ APK الأول (باش يتخلق الـ debug.keystore)
       - name: Build APK
         run: flutter build apk --release --split-per-abi
 
+      # 2. نجيبو SHA-1 من الـ keystore اللي تخلق
       - name: Print SHA-1 Fingerprint
         run: |
-          keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android | grep SHA1 || echo "Keystore not found. Run the build first to generate it."
+          keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android | grep SHA1
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
