@@ -16,12 +16,12 @@ class _PostsScreenState extends State<PostsScreen> {
   final FirestoreService _firestoreService = FirestoreService();
   final TextEditingController _postController = TextEditingController();
   final User? _user = FirebaseAuth.instance.currentUser;
-  File? _selectedImage; // باش نحفظو الصورة المختارة
+  File? _selectedImage;
 
-  // دالة تختار صورة من الغاليري ولا الكاميرا
+  // دالة تختار صورة
   Future<void> _pickImage() async {
     final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 60); // تقدري تبدلي لـ camera
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 60);
     if (image != null) {
       setState(() {
         _selectedImage = File(image.path);
@@ -29,30 +29,28 @@ class _PostsScreenState extends State<PostsScreen> {
     }
   }
 
-  // دالة تنشر البوست (مع صورة ولا بلا صورة)
+  // دالة تنشر البوست
   void _addPost() async {
     if (_postController.text.trim().isEmpty || _user == null) return;
 
     String? imageUrl;
     if (_selectedImage != null) {
-      // نرفعو الصورة لـ Firebase Storage
       String fileName = DateTime.now().millisecondsSinceEpoch.toString();
       Reference ref = FirebaseStorage.instance.ref().child('post_images/$fileName.jpg');
       await ref.putFile(_selectedImage!);
       imageUrl = await ref.getDownloadURL();
     }
 
-    // نضيفو البوست في Firestore
     await _firestoreService.addPost(
       _user!.uid,
       _user!.email ?? 'طالب',
       _postController.text.trim(),
-      imageUrl, // نقدرو نزيدوها في Firestore Service
+      imageUrl,
     );
 
     _postController.clear();
     setState(() {
-      _selectedImage = null; // نمسحو الصورة بعد النشر
+      _selectedImage = null;
     });
   }
 
@@ -132,6 +130,14 @@ class _PostsScreenState extends State<PostsScreen> {
     );
   }
 
+  // دالة باش نجيبو الاسم الأول (اللي قبل @)
+  String _getFirstName(String email) {
+    if (email.contains('@')) {
+      return email.split('@')[0];
+    }
+    return email;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -143,7 +149,7 @@ class _PostsScreenState extends State<PostsScreen> {
       ),
       body: Column(
         children: [
-          // خانة كتابة البوست + زر الصورة + زر الإرسال
+          // خانة كتابة البوست
           Padding(
             padding: const EdgeInsets.all(15.0),
             child: Column(
@@ -190,6 +196,7 @@ class _PostsScreenState extends State<PostsScreen> {
               ],
             ),
           ),
+          
           // قائمة البوستات
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
@@ -203,6 +210,8 @@ class _PostsScreenState extends State<PostsScreen> {
                   itemBuilder: (context, index) {
                     final post = posts[index];
                     int likes = post['likes'] ?? 0;
+                    String email = post['userName'] ?? 'مستخدم';
+                    String firstName = _getFirstName(email); // الاسم الأول فقط
 
                     return Card(
                       color: const Color(0xFF1E1E1E),
@@ -214,10 +223,10 @@ class _PostsScreenState extends State<PostsScreen> {
                           children: [
                             ListTile(
                               contentPadding: EdgeInsets.zero,
-                              title: Text(post['userName'] ?? 'مستخدم', style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold)),
+                              // الاسم الأول باللون الأبيض الخافت
+                              title: Text(firstName, style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.bold)),
                               subtitle: Text(post['content'] ?? '', style: const TextStyle(color: Colors.white)),
                             ),
-                            // إذا كان في صورة، نعرضوها
                             if (post['imageUrl'] != null)
                               Padding(
                                 padding: const EdgeInsets.symmetric(vertical: 8),
@@ -226,9 +235,10 @@ class _PostsScreenState extends State<PostsScreen> {
                             const Divider(color: Colors.white24),
                             Row(
                               children: [
-                                // زر اللايك
+                                // زر اللايك (كي يزيد مرة وحدة)
                                 GestureDetector(
                                   onTap: () async {
+                                    // نتحققو واش المستخدم ديجا دار لايك
                                     await FirebaseFirestore.instance.collection('posts').doc(post.id).update({
                                       'likes': likes + 1,
                                     });
