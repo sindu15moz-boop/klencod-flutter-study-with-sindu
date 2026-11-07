@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'app_language.dart';
 import 'auth_screen.dart';
 import 'about_screen.dart';
@@ -12,6 +13,7 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  // دالة تسجيل الخروج
   Future<void> _logout() async {
     await FirebaseAuth.instance.signOut();
     if (mounted) {
@@ -23,6 +25,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  // دالة تغيير اللغة + إعادة تشغيل التطبيق باش تتبدل كامل الصفحات
+  Future<void> _changeLanguage(String lang) async {
+    await AppLanguage.changeLanguage(lang);
+    if (mounted) {
+      Navigator.pop(context); // نسكرو النافذة
+      // نعاودو نطلقو التطبيق من صفحة الدخول باش كلشي يتبدل
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const AuthScreen()),
+        (route) => false,
+      );
+    }
+  }
+
+  // نافذة اختيار اللغة
   void _showLanguageDialog() {
     showDialog(
       context: context,
@@ -34,27 +51,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               ListTile(
                 title: const Text('العربية'),
-                onTap: () async {
-                  await AppLanguage.changeLanguage('ar');
-                  Navigator.pop(context);
-                  setState(() {});
-                },
+                onTap: () => _changeLanguage('ar'),
               ),
               ListTile(
                 title: const Text('Français'),
-                onTap: () async {
-                  await AppLanguage.changeLanguage('fr');
-                  Navigator.pop(context);
-                  setState(() {});
-                },
+                onTap: () => _changeLanguage('fr'),
               ),
               ListTile(
                 title: const Text('English'),
-                onTap: () async {
-                  await AppLanguage.changeLanguage('en');
-                  Navigator.pop(context);
-                  setState(() {});
-                },
+                onTap: () => _changeLanguage('en'),
               ),
             ],
           ),
@@ -89,14 +94,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ElevatedButton(
               onPressed: () async {
                 if (feedbackController.text.isNotEmpty) {
-                  // نسجلو التعليق في Firestore
                   await FirebaseFirestore.instance.collection('feedback').add({
                     'userId': FirebaseAuth.instance.currentUser?.uid,
                     'email': FirebaseAuth.instance.currentUser?.email,
                     'text': feedbackController.text,
                     'timestamp': FieldValue.serverTimestamp(),
                   });
-                  Navigator.pop(context);
+                  if (mounted) Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('شكراً لك! تم إرسال تعليقك.')),
                   );
