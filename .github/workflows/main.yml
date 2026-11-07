@@ -25,15 +25,20 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      # 1. نبنيو الـ APK الأول (باش يتخلق الـ debug.keystore)
+      # 1. نولد الأيقونات الجديدة (الشبح مع الخلفية)
+      - name: Generate Launcher Icons
+        run: flutter pub run flutter_launcher_icons
+
+      # 2. نبنيو الـ APK
       - name: Build APK
         run: flutter build apk --release --split-per-abi
 
-      # 2. نجيبو SHA-1 من الـ keystore اللي تخلق
+      # 3. نجيبو SHA-1 من الـ keystore (باش نضيفوه في Firebase)
       - name: Print SHA-1 Fingerprint
         run: |
-          keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android | grep SHA1
+          keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android | grep SHA1 || echo "Keystore not found. Run the build first to generate it."
 
+      # 4. نرفعو الـ APK
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
