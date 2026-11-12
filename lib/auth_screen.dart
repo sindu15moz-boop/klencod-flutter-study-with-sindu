@@ -16,30 +16,51 @@ class _AuthScreenState extends State<AuthScreen> {
   final AuthService _authService = AuthService();
   bool _isLoading = false;
 
+  // دالة الدخول بالإيميل
   void _login() async {
     setState(() => _isLoading = true);
     final user = await _authService.signIn(_emailController.text.trim(), _passwordController.text.trim());
+    if (!mounted) return;
     setState(() => _isLoading = false);
-    if (user != null && mounted) {
+
+    if (user != null) {
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomeScreen()));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('فشل الدخول: تحققي من الإيميل، الباسورد، أو الاتصال.')),
+      );
     }
   }
 
+  // دالة إنشاء حساب
   void _signUp() async {
     setState(() => _isLoading = true);
     final user = await _authService.signUp(_emailController.text.trim(), _passwordController.text.trim());
+    if (!mounted) return;
     setState(() => _isLoading = false);
-    if (user != null && mounted) {
+
+    if (user != null) {
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomeScreen()));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('فشل إنشاء الحساب: الإيميل مستعمل أو كلمة المرور ضعيفة.')),
+      );
     }
   }
 
+  // دالة الدخول بجوجل
   void _googleSignIn() async {
     setState(() => _isLoading = true);
     final user = await _authService.signInWithGoogle();
+    if (!mounted) return;
     setState(() => _isLoading = false);
-    if (user != null && mounted) {
+
+    if (user != null) {
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomeScreen()));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('فشل الدخول بجوجل: تأكدي من SHA-1 أو google-services.json.')),
+      );
     }
   }
 
