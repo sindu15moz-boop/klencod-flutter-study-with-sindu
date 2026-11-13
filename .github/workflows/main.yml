@@ -1,3 +1,4 @@
+
 name: Build Study with Sindu APK
 
 on:
@@ -29,14 +30,36 @@ jobs:
       - name: Generate Launcher Icons
         run: flutter pub run flutter_launcher_icons
 
-      # 2. نبنيو الـ APK (وهنا كيتخلق الـ keystore)
+      # 2. نبنيو الـ APK
       - name: Build APK
         run: flutter build apk --release --split-per-abi
 
-      # 3. نجيبو SHA-1 (من بعد البناء باش نلقاو الـ keystore)
+      # 3. نجيبو SHA-1 من ملفات APK الحقيقية
       - name: Print SHA-1 Fingerprint
         run: |
-          keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android | grep SHA1 || echo "Keystore not found."
+          set -e
+
+          APK_DIR="build/app/outputs/flutter-apk"
+
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)
+
+          if [ -z "$APKSIGNER" ]; then
+            echo "ERROR: apksigner not found."
+            exit 1
+          fi
+
+          if ! ls "$APK_DIR"/*.apk >/dev/null 2>&1; then
+            echo "ERROR: No APK files found."
+            exit 1
+          fi
+
+          for APK in "$APK_DIR"/*.apk; do
+            echo "======================================"
+            echo "APK: $APK"
+            echo "======================================"
+
+            "$APKSIGNER" verify --print-certs "$APK"
+          done
 
       # 4. نرفعو الـ APK
       - name: Upload APK
