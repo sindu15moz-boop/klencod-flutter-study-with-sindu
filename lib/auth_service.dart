@@ -6,13 +6,12 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // دالة كتسجل المستخدم في Firestore (إذا ما كانش مسجل)
+  // حفظ المستخدم في Firestore (إذا كان جديد)
   Future<void> _saveUserToFirestore(User user) async {
     final docRef = _db.collection('users').doc(user.uid);
     final doc = await docRef.get();
 
     if (!doc.exists) {
-      // إذا كان جديد، نسجلو
       await docRef.set({
         'email': user.email,
         'name': user.displayName ?? user.email?.split('@')[0] ?? 'طالب',
@@ -30,7 +29,7 @@ class AuthService {
       }
       return result.user;
     } catch (e) {
-      print(e.toString());
+      print("LOGIN ERROR: $e"); // <--- هادي باش نعرفو الخطأ
       return null;
     }
   }
@@ -44,7 +43,7 @@ class AuthService {
       }
       return result.user;
     } catch (e) {
-      print(e.toString());
+      print("SIGNUP ERROR: $e"); // <--- هادي باش نعرفو الخطأ
       return null;
     }
   }
@@ -67,7 +66,7 @@ class AuthService {
       }
       return result.user;
     } catch (e) {
-      print("Error Google Sign-In: $e");
+      print("GOOGLE ERROR: $e"); // <--- هادي باش نعرفو الخطأ
       return null;
     }
   }
