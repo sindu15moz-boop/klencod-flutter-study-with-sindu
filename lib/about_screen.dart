@@ -18,17 +18,28 @@ class AboutScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(height: 30),
-            // أيقونة التطبيق (تقدري تبدليها بصورة)
+            // أيقونة التطبيق
             const CircleAvatar(
               radius: 50,
               backgroundColor: Colors.white24,
               child: Icon(Icons.menu_book, size: 60, color: Colors.white),
             ),
             const SizedBox(height: 20),
+            // اسم التطبيق
             const Text(
               'Study with Sindu',
               style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold, fontFamily: 'Sanchez'),
             ),
+            const SizedBox(height: 10),
+            
+            // ⬇️⬇️ الجملة اللي طلبتي ⬇️⬇️
+            const Text(
+              'تم تصميم الواجهة من طرف: zouzii',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white70, fontSize: 14, fontFamily: 'Sanchez'),
+            ),
+            // ⬆️⬆️ الجملة اللي طلبتي ⬆️⬆️
+
             const SizedBox(height: 10),
             const Text(
               'نسخة تجريبية',
