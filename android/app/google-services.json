@@ -12,7 +12,12 @@
           "package_name": "com.study.room"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "103318032630-cen99v4j9tm26omjvoivsndhse1ql1go.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDqM9tu0mS7C0QKQ2gbzGAu1ohln8jrsSM"
@@ -20,7 +25,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "103318032630-cen99v4j9tm26omjvoivsndhse1ql1go.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
