@@ -7,6 +7,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -26,22 +27,57 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      # 1. نولد الأيقونات (باش الشبح يبان)
+      # Restore the permanent Android Debug Keystore
+      - name: Restore Stable Keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          set -e
+
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "ERROR: ANDROID_KEYSTORE_BASE64 secret is missing."
+            exit 1
+          fi
+
+          mkdir -p ~/.android
+
+          echo "$KEYSTORE_BASE64" | base64 --decode \
+            > ~/.android/debug.keystore
+
+          keytool -list \
+            -keystore ~/.android/debug.keystore \
+            -alias androiddebugkey \
+            -storepass android \
+            -keypass android
+
+      # Generate Launcher Icons
       - name: Generate Launcher Icons
         run: flutter pub run flutter_launcher_icons
 
-      # 2. نبنيو الـ APK
+      # Build APK
       - name: Build APK
         run: flutter build apk --release --split-per-abi
 
-      # 3. نجيبو SHA-1 من ملفات APK الحقيقية
+      # Print SHA-1 Fingerprint
       - name: Print SHA-1 Fingerprint
+        run: |
+          set -e
+
+          keytool -list -v \
+            -keystore ~/.android/debug.keystore \
+            -alias androiddebugkey \
+            -storepass android \
+            -keypass android | grep SHA1
+
+      # Verify APK Signature
+      - name: Verify APK Signature
         run: |
           set -e
 
           APK_DIR="build/app/outputs/flutter-apk"
 
-          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" \
+            -type f -name apksigner | sort -V | tail -n 1)
 
           if [ -z "$APKSIGNER" ]; then
             echo "ERROR: apksigner not found."
@@ -61,9 +97,10 @@ jobs:
             "$APKSIGNER" verify --print-certs "$APK"
           done
 
-      # 4. نرفعو الـ APK
+      # Upload APK
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: app-release
           path: build/app/outputs/flutter-apk/
+          if-no-files-found: error
