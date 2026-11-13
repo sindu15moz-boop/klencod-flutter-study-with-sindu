@@ -16,7 +16,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final AuthService _authService = AuthService();
   bool _isLoading = false;
 
-  // دالة الدخول بالإيميل
+  // دالة الدخول
   void _login() async {
     setState(() => _isLoading = true);
     final user = await _authService.signIn(_emailController.text.trim(), _passwordController.text.trim());
