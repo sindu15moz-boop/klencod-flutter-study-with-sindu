@@ -39,7 +39,7 @@ flutter:
     - assets/rain2.mp3
     - assets/app_icon.png
     - assets/app_icon_bg.png
-    - assets/videos/background.mp4  # <--- زدنا هادي تاع الفيديو
+    - assets/background.mp4
 
   fonts:
     - family: Sanchez
