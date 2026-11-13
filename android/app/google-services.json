@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "103318032630-0stg6rj6sdoabm0mcje05kqqv7a6mt6q.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.study.room",
+            "certificate_hash": "d96fbdb13ea75929568393d7c2b782873715a8bb"
+          }
+        },
+        {
           "client_id": "103318032630-dgc32sgphaplc4brr6mo29a6a30ns6mt.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
