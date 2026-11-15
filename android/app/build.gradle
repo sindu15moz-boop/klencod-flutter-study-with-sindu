@@ -1,6 +1,7 @@
 plugins {
     id "com.android.application"
     id "dev.flutter.flutter-gradle-plugin"
+    id "org.jetbrains.kotlin.android"  // <--- زدنا هادي
 }
 
 def localProperties = new Properties()
@@ -31,9 +32,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
+    // حيدنا kotlinOptions من هنا
 
     defaultConfig {
         applicationId = "com.study.room"
@@ -47,6 +46,13 @@ android {
         release {
             signingConfig = signingConfigs.debug
         }
+    }
+}
+
+// زدنا هادي في الأخير (باش نضبطو JvmTarget)
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
     }
 }
 
