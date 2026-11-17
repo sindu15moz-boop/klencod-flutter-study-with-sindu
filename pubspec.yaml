@@ -13,13 +13,13 @@ dependencies:
   image_picker: ^1.0.4
   fl_chart: ^0.66.0
   audioplayers: ^6.0.0
-  firebase_core: ^2.24.2
-  cloud_firestore: ^4.14.0
-  firebase_auth: ^4.16.0
+  firebase_core: ^3.6.0          # <--- تحديث
+  cloud_firestore: ^5.4.4        # <--- تحديث
+  firebase_auth: ^5.3.1          # <--- تحديث
   google_sign_in: ^6.2.1
-  firebase_storage: ^11.6.0
+  firebase_storage: ^12.3.4      # <--- تحديث
   intl: ^0.19.0
-  video_player: ^2.8.2  # <--- زدنا هادي تاع الفيديو
+  video_player: ^2.8.2
 
 dev_dependencies:
   flutter_test:
