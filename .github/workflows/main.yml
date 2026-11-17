@@ -53,9 +53,9 @@ jobs:
       - name: Generate Launcher Icons
         run: flutter pub run flutter_launcher_icons
 
-      # Build APK
+      # Build APK (حيدنا split-per-abi باش يخرج ملف واحد كبير)
       - name: Build APK
-        run: flutter build apk --release --split-per-abi
+        run: flutter build apk --release
 
       # Print SHA-1 Fingerprint
       - name: Print SHA-1 Fingerprint
