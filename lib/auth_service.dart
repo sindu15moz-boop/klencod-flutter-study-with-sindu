@@ -1,3 +1,4 @@
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -6,74 +7,99 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // حفظ المستخدم في Firestore (إذا كان جديد)
+  // حفظ بيانات المستخدم دون تعطيل المصادقة
   Future<void> _saveUserToFirestore(User user) async {
-    final docRef = _db.collection('users').doc(user.uid);
-    final doc = await docRef.get();
+    try {
+      final docRef = _db.collection('users').doc(user.uid);
+      final doc = await docRef.get();
 
-    if (!doc.exists) {
-      await docRef.set({
+      final data = {
         'email': user.email,
-        'name': user.displayName ?? user.email?.split('@')[0] ?? 'طالب',
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+        'name': user.displayName ??
+            user.email?.split('@')[0] ??
+            'طالب',
+      };
+
+      if (!doc.exists) {
+        await docRef.set({
+          ...data,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      } else {
+        await docRef.set(data, SetOptions(merge: true));
+      }
+    } catch (e) {
+      // خطأ Firestore لا يلغي نجاح تسجيل الدخول
+      print('FIRESTORE ERROR: $e');
     }
   }
 
-  // تسجيل الدخول بالإيميل وكلمة المرور
+  // تسجيل الدخول بالإيميل
   Future<User?> signIn(String email, String password) async {
-    try {
-      UserCredential result = await _auth.signInWithEmailAndPassword(email: email, password: password);
-      if (result.user != null) {
-        await _saveUserToFirestore(result.user!);
-      }
-      return result.user;
-    } catch (e) {
-      print("LOGIN ERROR: $e"); // <--- هادي باش نعرفو الخطأ
-      return null;
+    final result = await _auth.signInWithEmailAndPassword(
+      email: email.trim().toLowerCase(),
+      password: password,
+    );
+
+    final user = result.user;
+
+    if (user != null) {
+      await _saveUserToFirestore(user);
     }
+
+    return user;
   }
 
   // إنشاء حساب جديد
   Future<User?> signUp(String email, String password) async {
-    try {
-      UserCredential result = await _auth.createUserWithEmailAndPassword(email: email, password: password);
-      if (result.user != null) {
-        await _saveUserToFirestore(result.user!);
-      }
-      return result.user;
-    } catch (e) {
-      print("SIGNUP ERROR: $e"); // <--- هادي باش نعرفو الخطأ
-      return null;
+    final result = await _auth.createUserWithEmailAndPassword(
+      email: email.trim().toLowerCase(),
+      password: password,
+    );
+
+    final user = result.user;
+
+    if (user != null) {
+      await _saveUserToFirestore(user);
     }
+
+    return user;
   }
 
   // تسجيل الدخول بجوجل
   Future<User?> signInWithGoogle() async {
-    try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) return null;
+    final GoogleSignInAccount? googleUser =
+        await GoogleSignIn().signIn();
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      UserCredential result = await _auth.signInWithCredential(credential);
-      if (result.user != null) {
-        await _saveUserToFirestore(result.user!);
-      }
-      return result.user;
-    } catch (e) {
-      print("GOOGLE ERROR: $e"); // <--- هادي باش نعرفو الخطأ
+    if (googleUser == null) {
       return null;
     }
+
+    final googleAuth = await googleUser.authentication;
+
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+
+    final result = await _auth.signInWithCredential(credential);
+    final user = result.user;
+
+    if (user != null) {
+      await _saveUserToFirestore(user);
+    }
+
+    return user;
   }
 
   // تسجيل الخروج
   Future<void> signOut() async {
-    await GoogleSignIn().signOut();
+    try {
+      await GoogleSignIn().signOut();
+    } catch (e) {
+      print('GOOGLE SIGNOUT ERROR: $e');
+    }
+
     await _auth.signOut();
   }
 }
