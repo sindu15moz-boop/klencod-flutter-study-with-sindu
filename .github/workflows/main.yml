@@ -55,8 +55,7 @@ jobs:
 
       # Build APK (حيدنا split-per-abi باش يخرج ملف واحد كبير)
       - name: Build APK
-        run: flutter build apk --release
-
+  run: flutter build apk --debug
       # Print SHA-1 Fingerprint
       - name: Print SHA-1 Fingerprint
         run: |
