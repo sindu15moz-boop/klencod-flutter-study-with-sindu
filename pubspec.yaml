@@ -12,7 +12,7 @@ dependencies:
   shared_preferences: ^2.2.2
   image_picker: ^1.0.4
   fl_chart: ^0.66.0
-  audioplayers: ^5.2.1
+  audioplayers: ^6.0.0
   firebase_core: ^2.24.2
   cloud_firestore: ^4.14.0
   firebase_auth: ^4.16.0
